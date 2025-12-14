@@ -4,17 +4,21 @@ using UnityEngine;
 public class InputManager : MonoBehaviour
 {
     private InputSystem_Actions actions;
-    public static event Action<Vector2> OnLook;
+    public static event Action MouseUp;
+    public static event Action MouseDown;
+    
     
     private void Awake()
     {
         actions = new InputSystem_Actions();
-        actions.Player.Look.performed += ctx => OnLook?.Invoke(ctx.ReadValue<Vector2>());
+        actions.Player.Attack.performed += (_) => MouseDown?.Invoke();
+        actions.Player.Attack.canceled += (_) => MouseUp?.Invoke();
     }
     
     private void OnDestroy()
     {
-        OnLook = null;
+        MouseDown = null;
+        MouseUp = null;
     }
 
     private void OnEnable()

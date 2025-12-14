@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 325864213}
   - component: {fileID: 325864211}
   - component: {fileID: 325864216}
+  - component: {fileID: 325864217}
   m_Layer: 0
   m_Name: Ship
   m_TagString: Untagged
@@ -152,7 +153,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   rb: {fileID: 325864213}
-  mainCam: {fileID: 519420031}
   torque: 1
 --- !u!50 &325864213
 Rigidbody2D:
@@ -167,7 +167,7 @@ Rigidbody2D:
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDamping: 0
+  m_LinearDamping: 1
   m_AngularDamping: 20
   m_GravityScale: 0
   m_Material: {fileID: 0}
@@ -291,6 +291,20 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 1
+--- !u!114 &325864217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 325864210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dff15b14172a86428bec006425fec2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  thrustForce: 10
+  rb: {fileID: 325864213}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -438,6 +452,7 @@ GameObject:
   m_Component:
   - component: {fileID: 554256736}
   - component: {fileID: 554256735}
+  - component: {fileID: 554256737}
   m_Layer: 0
   m_Name: Input Manager
   m_TagString: Untagged
@@ -472,6 +487,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &554256737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 554256734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b270a5741a00f84da0c017cff287924, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  mainCam: {fileID: 519420031}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,9 +4,8 @@ using UnityEngine.InputSystem;
 
 public class RotateTowardsMouse : MonoBehaviour
 {
-    private Vector2 mousePos;
+    private Vector2 MousePos => MousePosition.mousePos;
     [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private Camera mainCam;
     [SerializeField] private float torque;
 
     private void OnValidate()
@@ -20,9 +19,7 @@ public class RotateTowardsMouse : MonoBehaviour
 
     void FixedUpdate()
     {
-        mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        
-        float angleSelfToMouse = Vector2.SignedAngle(transform.up, mousePos - (Vector2)transform.position);
+        float angleSelfToMouse = Vector2.SignedAngle(transform.up, MousePos - (Vector2)transform.position);
         rb.AddTorque(torque * angleSelfToMouse);
     }
 }
