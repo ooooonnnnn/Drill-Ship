@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class ThrustToMouse : MonoBehaviour
+public class ThrustWhenMouse : MonoBehaviour
 {
     public bool thrusting { get; private set; }
     [SerializeField] private float thrustForce;
