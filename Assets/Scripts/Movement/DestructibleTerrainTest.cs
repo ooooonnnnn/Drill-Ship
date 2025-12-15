@@ -51,6 +51,17 @@ public class DestructibleTerrainTest : MonoBehaviour
     private void UpdateTerrain()
     {
         DeleteSquare();
+        List<List<Vector2Int>> regions = FindRegions();
+        foreach (List<Vector2Int> region in regions)
+        {
+            Color color = MyColors.RandomColor;
+            foreach (Vector2Int pixel in region)
+            {
+                texture.SetPixel(pixel.x, pixel.y, color);
+            }
+            texture.Apply();
+        }
+        
         UpdatePolyCol();
     }
 
@@ -80,7 +91,6 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     private void UpdatePolyCol()
     {
-        print("Test paths");
         polyCollider.pathCount = 0;
         polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
     }
@@ -93,9 +103,9 @@ public class DestructibleTerrainTest : MonoBehaviour
         //Construct boolean version of the textureKeep track of visited pixels
         _solid = new Dictionary<Vector2Int, bool>();
         _visited = new Dictionary<Vector2Int, bool>();
-        for (int i = 0; i < sprite.bounds.size.x; i++)
+        for (int i = (int)sprite.rect.x; i < sprite.rect.width; i++)
         {
-            for (int j = 0; j < sprite.bounds.size.y; j++)
+            for (int j = (int)sprite.rect.y; j < sprite.rect.height; j++)
             {
                 _solid.Add(new Vector2Int(i, j), AlphaThreshold(texture.GetPixel(i, j).a));
                 _visited.Add(new Vector2Int(i, j), false);
@@ -104,29 +114,29 @@ public class DestructibleTerrainTest : MonoBehaviour
         
         //Get all regions
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
-        foreach (KeyValuePair<Vector2Int, bool> keyValue in _visited)
+        Stack<Vector2Int> newVisited = new();
+        List<KeyValuePair<Vector2Int, bool>> visitedList = _visited.ToList();
+        for (int i = 0; i < visitedList.Count; i++)
         {
-            if (keyValue.Value) continue;   // Skip visited
-            if (!_solid[keyValue.Key])      // Skip non-solid pixels
+            KeyValuePair<Vector2Int, bool> pixelVisited = visitedList[i];
+            
+            if (pixelVisited.Value) continue;   // Skip visited
+            if (!_solid[pixelVisited.Key])      // Skip non-solid pixels
             {
-                _visited[keyValue.Key] = true;
+                newVisited.Push(pixelVisited.Key);
                 continue;
             }
             
-            regions.Add(FloodFill(keyValue.Key, out List<Vector2Int> visitedPixels));
-            
-            foreach (Vector2Int pixel in visitedPixels)
-            {
-                _visited[pixel] = true;
-            }
+            regions.Add(FloodFill(pixelVisited.Key));
         }
+        while (newVisited.Count > 0) _visited[newVisited.Pop()] = true;
         
         return regions;
     }
 
     private bool AlphaThreshold(float alpha) => alpha > solidAlphaThreshold;
 
-    private List<Vector2Int> FloodFill(Vector2Int start, out List<Vector2Int> visitedPixels)
+    private List<Vector2Int> FloodFill(Vector2Int start)
     {
         if (!_solid[start]) Debug.LogError("Trying to flood fill from non-solid pixel");
 
@@ -138,17 +148,23 @@ public class DestructibleTerrainTest : MonoBehaviour
         _visited[start] = true;
         while (currentSearch.Count > 0)
         {
-            foreach (var neighbor in NeighborsOfPixel(currentSearch.Peek()))
+            List<Vector2Int> neighbors = NeighborsOfPixel(currentSearch.Peek());
+            region.Add(currentSearch.Pop());
+
+            foreach (Vector2Int neighbor in neighbors)
             {
+                if (_visited[neighbor]) continue;
+                _visited[neighbor] = true;
                 
+                if (!_solid[neighbor]) continue;
+                currentSearch.Push(neighbor);
             }
+            
         }
-        //TODO: temporary
-        visitedPixels = region;
         return region;
     }
 
-    private IEnumerable NeighborsOfPixel(Vector2Int peek)
+    private List<Vector2Int> NeighborsOfPixel(Vector2Int peek)
     {
         List<Vector2Int> neighbors = new();
         if (peek.x > 0) neighbors.Add(peek + Vector2Int.left);
