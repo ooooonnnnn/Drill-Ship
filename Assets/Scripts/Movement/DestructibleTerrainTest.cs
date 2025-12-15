@@ -34,10 +34,14 @@ public class DestructibleTerrainTest : MonoBehaviour
         Vector2 start = new Vector2(texturePos.x - width * 0.5f, texturePos.y - width * 0.5f);
         Vector2 end = new Vector2(texturePos.x + width * 0.5f, texturePos.y + width * 0.5f);
         
+        print($"Deleting square from {start} to {end}");
+        
         for (int x = (int)start.x; x < (int)end.x; x++)
         {
+            if (x < 0 || x >= texture.width) continue;
             for (int y = (int)start.y; y < (int)end.y; y++)
             {
+                if (y < 0 || y >= texture.height) continue;
                 texture.SetPixel(x, y, Color.clear);
             }
         }
