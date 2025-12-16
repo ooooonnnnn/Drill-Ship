@@ -85,7 +85,7 @@ public class DestructibleTerrainTest : MonoBehaviour
             // MyDebug.DrawX(center, .1f, Color.red, 1f);
             
             //Create a new object at the center of mass
-            GameObject newObject = Instantiate(selfPrefab, center, Quaternion.identity);
+            GameObject newObject = Instantiate(selfPrefab, center, transform.rotation);
             DestructibleTerrainTest newTerrain = newObject.GetComponent<DestructibleTerrainTest>();
             SpriteRenderer newSpriteRenderer = newObject.GetComponent<SpriteRenderer>();
             Vector2 newPivot = WorldToPixel(center);
