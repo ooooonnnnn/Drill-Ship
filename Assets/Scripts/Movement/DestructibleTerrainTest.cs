@@ -17,7 +17,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
     [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
     private Sprite sprite => spriteRenderer.sprite;
-    public Texture2D texture;
+    private Texture2D texture => spriteRenderer.sprite.texture;
     // Flood fill maps
     private Dictionary<Vector2Int, bool> _solid;
     private Dictionary<Vector2Int, bool> _visited;
@@ -27,8 +27,10 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         polyCollider = GetComponent<PolygonCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        texture = Instantiate(solidSpritePrerfab.texture);
-        spriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        Texture2D newTexture = Instantiate(solidSpritePrerfab.texture);
+        spriteRenderer.sprite = 
+            Sprite.Create(
+                newTexture, new Rect(0, 0, newTexture.width, newTexture.height), new Vector2(0.5f, 0.5f));
     }
 
     private void Awake()
@@ -36,6 +38,11 @@ public class DestructibleTerrainTest : MonoBehaviour
         texture.Apply();
         InputManager.MouseDown += UpdateTerrain;
         print($"Original pivot: {spriteRenderer.sprite.pivot}");
+    }
+    
+    private void OnDestroy()
+    {
+        InputManager.MouseDown -= UpdateTerrain;
     }
 
     // private void Start()
@@ -87,6 +94,8 @@ public class DestructibleTerrainTest : MonoBehaviour
             //Create a new object at the center of mass
             GameObject newObject = Instantiate(selfPrefab, center, transform.rotation);
             DestructibleTerrainTest newTerrain = newObject.GetComponent<DestructibleTerrainTest>();
+            newTerrain.enabled = true;
+            newObject.GetComponent<PolygonCollider2D>().enabled = true;
             SpriteRenderer newSpriteRenderer = newObject.GetComponent<SpriteRenderer>();
             Vector2 newPivot = WorldToPixel(center);
             Rect spriteRect = spriteRenderer.sprite.rect;
@@ -100,7 +109,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                     Instantiate(emptySpritePrerfab.texture),
                     spriteRenderer.sprite.rect,
                     pivotNormalized);
-            newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
+            // newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
             
             // Only the relevant region is solid
              foreach (Vector2Int pixel in region)
@@ -110,7 +119,11 @@ public class DestructibleTerrainTest : MonoBehaviour
              }
             newSpriteRenderer.sprite.texture.Apply();
             
+            //Update collider on the new object
             newTerrain.UpdatePolyCol();
+            
+            //Self destruct
+            Destroy(gameObject);
             
             // Color color = MyColors.RandomColor;
             // foreach (Vector2Int pixel in region)
@@ -147,8 +160,8 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     public void UpdatePolyCol()
     {
-        polyCollider.pathCount = 0;
-        polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
+        // polyCollider.pathCount = 0;
+        // polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
     }
 
     /// <summary>

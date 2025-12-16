@@ -55,7 +55,6 @@ MonoBehaviour:
   mainCam: {fileID: 0}
   polyCollider: {fileID: 5005111697051698417}
   isOriginalTerrain: 0
-  texture: {fileID: 0}
 --- !u!212 &6646667876845725307
 SpriteRenderer:
   serializedVersion: 2
@@ -161,13 +160,9 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -0.30232465, y: -0.7553244}
-      - {x: 1.28, y: -1.28}
-      - {x: 0.3593415, y: 0.23044682}
+    - - {x: 1.28, y: -1.28}
       - {x: 1.28, y: 1.28}
-      - {x: 0.3312472, y: 2.359051}
       - {x: -1.28, y: 1.28}
-      - {x: -2.6659384, y: -0.036841273}
       - {x: -1.28, y: -1.28}
   m_UseDelaunayMesh: 1
 --- !u!50 &7689948798151475695
@@ -185,7 +180,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
