@@ -15,9 +15,9 @@ public class DestructibleTerrainTest : MonoBehaviour
     [HideInInspector] [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Camera mainCam;
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
-    [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginOfTerrain;
+    [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
     private Sprite sprite => spriteRenderer.sprite;
-    private Texture2D texture;
+    public Texture2D texture;
     // Flood fill maps
     private Dictionary<Vector2Int, bool> _solid;
     private Dictionary<Vector2Int, bool> _visited;
@@ -86,24 +86,30 @@ public class DestructibleTerrainTest : MonoBehaviour
             //Create a new object at the center of mass
             GameObject newObject = Instantiate(selfPrefab, center, Quaternion.identity);
             DestructibleTerrainTest newTerrain = newObject.GetComponent<DestructibleTerrainTest>();
-            newTerrain.isOriginOfTerrain = false;
+            SpriteRenderer newSpriteRenderer = newObject.GetComponent<SpriteRenderer>();
+            newSpriteRenderer.sprite = 
+                Sprite.Create(
+                    Instantiate(emptySpritePrerfab.texture),
+                    new Rect(0, 0, emptySpritePrerfab.texture.width,
+                    emptySpritePrerfab.texture.height), new Vector2(0.5f, 0.5f));
             newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
             
-            //Make the new texture the same as the region and erase this region from this one's texture
-            foreach (Vector2Int pixel in region)
-            {
-                newTerrain.texture.SetPixel(pixel.x, pixel.y, new Color(1, 1, 1, 1));
-                texture.SetPixel(pixel.x, pixel.y, Color.clear);
-            }
+            // Only the relevant region is solid
+             foreach (Vector2Int pixel in region)
+             {
+                 newSpriteRenderer.sprite.texture.SetPixel(pixel.x, pixel.y, Color.white);
+                 // spriteRenderer.sprite.texture.SetPixel(pixel.x, pixel.y, Color.clear);
+             }
+            newSpriteRenderer.sprite.texture.Apply();
             
             newTerrain.UpdatePolyCol();
             
-            Color color = MyColors.RandomColor;
-            foreach (Vector2Int pixel in region)
-            {
-                texture.SetPixel(pixel.x, pixel.y, color);
-            }
-            texture.Apply();
+            // Color color = MyColors.RandomColor;
+            // foreach (Vector2Int pixel in region)
+            // {
+            //     texture.SetPixel(pixel.x, pixel.y, color);
+            // }
+            // texture.Apply();
         }
     }
 

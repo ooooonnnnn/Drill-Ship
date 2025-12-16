@@ -47,10 +47,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 234980c2e34126c4896010c4ce2190d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  selfPrefab: {fileID: 0}
+  selfPrefab: {fileID: 9027875901408125017}
   solidAlphaThreshold: 0.1
   solidSpritePrerfab: {fileID: 7482667652216324306, guid: 59a69f75627427a44a50162f65dda43b, type: 3}
-  emptySpritePrerfab: {fileID: 0}
+  emptySpritePrerfab: {fileID: 7482667652216324306, guid: 1245c5d45167dc447b784410141590e2, type: 3}
   spriteRenderer: {fileID: 6646667876845725307}
   mainCam: {fileID: 0}
   polyCollider: {fileID: 5005111697051698417}
