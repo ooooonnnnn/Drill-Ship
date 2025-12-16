@@ -8,22 +8,26 @@ using UnityEngine.InputSystem;
 
 public class DestructibleTerrainTest : MonoBehaviour
 {
+    [SerializeField] private GameObject selfPrefab;
     [SerializeField] private float solidAlphaThreshold;
-    [SerializeField] private Sprite spritePrerfab;
+    [SerializeField] private Sprite solidSpritePrerfab;
+    [SerializeField] private Sprite emptySpritePrerfab;
     [HideInInspector] [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Camera mainCam;
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
+    [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginOfTerrain;
     private Sprite sprite => spriteRenderer.sprite;
     private Texture2D texture;
     // Flood fill maps
     private Dictionary<Vector2Int, bool> _solid;
     private Dictionary<Vector2Int, bool> _visited;
 
+
     private void OnValidate()
     {
         polyCollider = GetComponent<PolygonCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        texture = Instantiate(spritePrerfab.texture);
+        texture = Instantiate(solidSpritePrerfab.texture);
         spriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
     }
 
@@ -77,7 +81,22 @@ public class DestructibleTerrainTest : MonoBehaviour
         {
             //Find the center of mass
             Vector2 center = region.Aggregate(Vector2.zero, (current, pixel) => current + PixelToWorld(pixel)) / region.Count;
-            MyDebug.DrawX(center, .1f, Color.red, 1f);
+            // MyDebug.DrawX(center, .1f, Color.red, 1f);
+            
+            //Create a new object at the center of mass
+            GameObject newObject = Instantiate(selfPrefab, center, Quaternion.identity);
+            DestructibleTerrainTest newTerrain = newObject.GetComponent<DestructibleTerrainTest>();
+            newTerrain.isOriginOfTerrain = false;
+            newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
+            
+            //Make the new texture the same as the region and erase this region from this one's texture
+            foreach (Vector2Int pixel in region)
+            {
+                newTerrain.texture.SetPixel(pixel.x, pixel.y, new Color(1, 1, 1, 1));
+                texture.SetPixel(pixel.x, pixel.y, Color.clear);
+            }
+            
+            newTerrain.UpdatePolyCol();
             
             Color color = MyColors.RandomColor;
             foreach (Vector2Int pixel in region)
@@ -112,7 +131,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         texture.Apply();
     }
 
-    private void UpdatePolyCol()
+    public void UpdatePolyCol()
     {
         polyCollider.pathCount = 0;
         polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
