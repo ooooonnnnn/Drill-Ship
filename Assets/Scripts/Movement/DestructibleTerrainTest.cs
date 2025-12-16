@@ -114,22 +114,17 @@ public class DestructibleTerrainTest : MonoBehaviour
         
         //Get all regions
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
-        Stack<Vector2Int> newVisited = new();
-        List<KeyValuePair<Vector2Int, bool>> visitedList = _visited.ToList();
-        for (int i = 0; i < visitedList.Count; i++)
+        foreach (KeyValuePair<Vector2Int, bool> pixelSolid in _solid)
         {
-            KeyValuePair<Vector2Int, bool> pixelVisited = visitedList[i];
-            
-            if (pixelVisited.Value) continue;   // Skip visited
-            if (!_solid[pixelVisited.Key])      // Skip non-solid pixels
+            if (_visited[pixelSolid.Key]) continue;   // Skip visited
+            if (!pixelSolid.Value)      // Skip non-solid pixels
             {
-                newVisited.Push(pixelVisited.Key);
+                _visited[pixelSolid.Key] = true;
                 continue;
             }
             
-            regions.Add(FloodFill(pixelVisited.Key));
+            regions.Add(FloodFill(pixelSolid.Key));
         }
-        while (newVisited.Count > 0) _visited[newVisited.Pop()] = true;
         
         return regions;
     }
