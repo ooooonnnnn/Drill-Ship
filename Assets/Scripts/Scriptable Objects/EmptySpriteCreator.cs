@@ -14,7 +14,7 @@ public class EmptySpriteCreator : ScriptableObject
         Vector2Int topRight = new Vector2Int((int)emptySprite.rect.width, (int)emptySprite.rect.height) + btmLeft;
         for (int i = btmLeft.x; i < topRight.x; i++)
         {
-            for (int j = btmLeft.x; j < topRight.y; j++)
+            for (int j = btmLeft.y; j < topRight.y; j++)
             {
                 texture.SetPixel(i, j, Color.clear);
             }

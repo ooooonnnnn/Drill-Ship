@@ -35,6 +35,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         texture.Apply();
         InputManager.MouseDown += UpdateTerrain;
+        print($"Original pivot: {spriteRenderer.sprite.pivot}");
     }
 
     // private void Start()
@@ -87,11 +88,18 @@ public class DestructibleTerrainTest : MonoBehaviour
             GameObject newObject = Instantiate(selfPrefab, center, Quaternion.identity);
             DestructibleTerrainTest newTerrain = newObject.GetComponent<DestructibleTerrainTest>();
             SpriteRenderer newSpriteRenderer = newObject.GetComponent<SpriteRenderer>();
+            Vector2 newPivot = WorldToPixel(center);
+            Rect spriteRect = spriteRenderer.sprite.rect;
+            Vector2 pivotNormalized = new Vector2(
+                (newPivot.x - spriteRect.x) / spriteRect.width,
+                (newPivot.y - spriteRect.y) / spriteRect.height
+            );
+            print($"new pivot: {newPivot}");
             newSpriteRenderer.sprite = 
                 Sprite.Create(
                     Instantiate(emptySpritePrerfab.texture),
-                    new Rect(0, 0, emptySpritePrerfab.texture.width,
-                    emptySpritePrerfab.texture.height), new Vector2(0.5f, 0.5f));
+                    spriteRenderer.sprite.rect,
+                    pivotNormalized);
             newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
             
             // Only the relevant region is solid

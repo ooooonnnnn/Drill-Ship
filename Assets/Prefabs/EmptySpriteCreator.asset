@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 384a8a2db832a6b44b153295efd2962c, type: 3}
   m_Name: EmptySpriteCreator
   m_EditorClassIdentifier: Assembly-CSharp::EmptySpriteCreator
-  originalSprite: {fileID: 0}
-  emptySprite: {fileID: 0}
+  originalSprite: {fileID: 7482667652216324306, guid: 59a69f75627427a44a50162f65dda43b, type: 3}
+  emptySprite: {fileID: 7482667652216324306, guid: 1245c5d45167dc447b784410141590e2, type: 3}

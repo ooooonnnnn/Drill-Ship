@@ -54,7 +54,8 @@ MonoBehaviour:
   spriteRenderer: {fileID: 6646667876845725307}
   mainCam: {fileID: 0}
   polyCollider: {fileID: 5005111697051698417}
-  isOriginOfTerrain: 0
+  isOriginalTerrain: 0
+  texture: {fileID: 0}
 --- !u!212 &6646667876845725307
 SpriteRenderer:
   serializedVersion: 2
