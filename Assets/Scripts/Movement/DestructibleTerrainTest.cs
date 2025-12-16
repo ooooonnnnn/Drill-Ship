@@ -50,8 +50,29 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     private void UpdateTerrain()
     {
+        //Dig
         DeleteSquare();
+        
+        SeparateRegions();
+
+        //Assuming this object is one contiguous region, create a new poly collider 
+        UpdatePolyCol();
+    }
+
+        
+    /// <summary>
+    /// Separate contiguous regions into separate objects
+    /// </summary>
+    private void SeparateRegions()
+    {
         List<List<Vector2Int>> regions = FindRegions();
+        if (regions.Count == 1) return;     //No need to create new objects if there is only one region
+        if (regions.Count == 0)
+        {
+            print($"No solid regions in {gameObject.name}. Detroying");
+            Destroy(gameObject);
+        }
+
         foreach (List<Vector2Int> region in regions)
         {
             Color color = MyColors.RandomColor;
@@ -61,8 +82,6 @@ public class DestructibleTerrainTest : MonoBehaviour
             }
             texture.Apply();
         }
-        
-        UpdatePolyCol();
     }
 
     private void DeleteSquare()
