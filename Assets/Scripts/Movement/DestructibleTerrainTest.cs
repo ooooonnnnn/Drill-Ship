@@ -75,6 +75,10 @@ public class DestructibleTerrainTest : MonoBehaviour
 
         foreach (List<Vector2Int> region in regions)
         {
+            //Find the center of mass
+            Vector2 center = region.Aggregate(Vector2.zero, (current, pixel) => current + PixelToWorld(pixel)) / region.Count;
+            MyDebug.DrawX(center, .1f, Color.red, 1f);
+            
             Color color = MyColors.RandomColor;
             foreach (Vector2Int pixel in region)
             {
