@@ -37,7 +37,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         texture.Apply();
         InputManager.MouseDown += UpdateTerrain;
-        print($"Original pivot: {spriteRenderer.sprite.pivot}");
+        // print($"Original pivot: {spriteRenderer.sprite.pivot}");
     }
     
     private void OnDestroy()
@@ -103,7 +103,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                 (newPivot.x - spriteRect.x) / spriteRect.width,
                 (newPivot.y - spriteRect.y) / spriteRect.height
             );
-            print($"new pivot: {newPivot}");
+            // print($"new pivot: {newPivot}");
             newSpriteRenderer.sprite = 
                 Sprite.Create(
                     Instantiate(emptySpritePrerfab.texture),
@@ -162,6 +162,17 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         // polyCollider.pathCount = 0;
         // polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
+    }
+
+    /// <summary>
+    /// Gets the edge of the texture, ordered.
+    /// </summary>
+    /// <returns></returns>
+    private List<Vector2Int> GetEdge()
+    {
+        //Use marching squares
+        
+        return new List<Vector2Int>();
     }
 
     /// <summary>
