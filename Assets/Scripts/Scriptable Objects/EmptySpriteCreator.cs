@@ -21,5 +21,22 @@ public class EmptySpriteCreator : ScriptableObject
         }
         
         texture.Apply();
+        
+        //Save
+#if UNITY_EDITOR
+        // Save the modified texture to disk to make changes permanent
+        string texturePath = UnityEditor.AssetDatabase.GetAssetPath(texture);
+        if (!string.IsNullOrEmpty(texturePath))
+        {
+            byte[] pngBytes = texture.EncodeToPNG();
+            System.IO.File.WriteAllBytes(texturePath, pngBytes);
+            UnityEditor.AssetDatabase.Refresh();
+            Debug.Log("Texture saved permanently at: " + texturePath);
+        }
+        else
+        {
+            Debug.LogWarning("Could not find asset path for texture. Ensure it's an imported asset.");
+        }
+#endif
     }
 }
