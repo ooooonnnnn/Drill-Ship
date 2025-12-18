@@ -165,7 +165,11 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         // polyCollider.pathCount = 0;
         // polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
-        List<Vector2> edge = GetEdge()?.Select(PixelToWorld).ToList();
+        List<Vector2> edge = GetEdge()?.
+            Select(
+                pix => (Vector2)transform.InverseTransformPoint(
+                    PixelToWorld(pix))).
+            ToList();
         polyCollider.pathCount = 0;
         if (edge == null) return;
         polyCollider.SetPath(0,edge);
@@ -218,7 +222,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         
         if (!foundEdge) return null;
 
-        
+        //Once found an initial pixel, start marching
         Vector2Int curPosition = startPosition;
         do
         {
