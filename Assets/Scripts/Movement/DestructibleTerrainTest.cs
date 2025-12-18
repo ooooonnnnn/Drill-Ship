@@ -2,9 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Helper;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Vector2 = UnityEngine.Vector2;
 
 public class DestructibleTerrainTest : MonoBehaviour
 {
@@ -162,17 +165,144 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         // polyCollider.pathCount = 0;
         // polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
+        List<Vector2> edge = GetEdge()?.Select(PixelToWorld).ToList();
+        polyCollider.pathCount = 0;
+        if (edge == null) return;
+        polyCollider.SetPath(0,edge);
     }
 
     /// <summary>
     /// Gets the edge of the texture, ordered.
     /// </summary>
     /// <returns></returns>
-    private List<Vector2Int> GetEdge()
+    [CanBeNull]
+    private List<Vector2> GetEdge()
     {
-        //Use marching squares
+        List<Vector2> edge = new();
         
-        return new List<Vector2Int>();
+        //Use marching squares
+        //Look for a junction of pixels that implies an edge
+        Rect rect = spriteRenderer.sprite.rect;
+        Vector2Int startPosition = Vector2Int.zero;
+        bool foundEdge = false;
+        for (int x = (int)rect.min.x; x < rect.max.x - 1; x++)
+        {
+            for (int y = (int)rect.min.y; y < rect.max.y - 1; y++)
+            {
+                //Get the values of the four pixels that touch in a corner
+                bool[] junctionPixels = { false, false, false, false };
+                GetJunctionPixelsPadded(junctionPixels, x, y);
+
+                //  0*  *0  **  00  mean nothing. discard them
+                //  *0  0*  **  00
+                
+                //check for the first two
+                int totalTrue = junctionPixels.Aggregate(0, (cur, value) => cur + (value ? 1 : 0));
+                if (junctionPixels[0] != junctionPixels[1] && junctionPixels[0] != junctionPixels[2] && totalTrue == 2)
+                {
+                    continue;
+                }
+                //check for the last two
+                if (totalTrue == 4 || totalTrue == 0)
+                {
+                    continue;
+                }
+                
+                //If the code reached here it means the junction implies an edge
+                startPosition = new(x, y);
+                foundEdge = true;
+                break;
+            }
+            if (foundEdge) break;
+        }
+        
+        if (!foundEdge) return null;
+
+        
+        Vector2Int curPosition = startPosition;
+        do
+        {
+            edge.Add(curPosition);
+            MyDebug.DrawX(PixelToWorld(curPosition), .01f, Color.red, 1f);
+            bool[] junctionPixels = {false, false, false, false};
+            GetJunctionPixelsPadded(junctionPixels, curPosition.x, curPosition.y);
+            //If the march reached out of the rect, go counterclockwise on the edge of the rect
+            // if (curPosition.x < rect.min.x)
+            // {
+            //     curPosition.y--;
+            //     if (curPosition.y < rect.min.y) curPosition.x++;
+            //     continue;
+            // }
+            // if (curPosition.y < rect.min.y)
+            // {
+            //     curPosition.x++;
+            //     if (curPosition.x >= rect.max.x - 1) curPosition.y++;
+            //     continue;
+            // }
+            // if (curPosition.x >= rect.max.x - 1)
+            // {
+            //     curPosition.y++;
+            //     if (curPosition.y >= rect.max.y - 1) curPosition.x--;
+            //     continue;
+            // }
+            // if (curPosition.y >= rect.max.y - 1)
+            // {
+            //     curPosition.x--;
+            //     if (curPosition.x < rect.min.x) curPosition.y--;
+            //     continue;
+            // }
+            
+            //Any of the following patterns imply an edge
+            // *0   *0  *0  mean go up
+            // *0   00  **
+            if (junctionPixels[2] && !junctionPixels[3])
+            {
+                //go up
+                curPosition.y++;
+            }
+            // **   **  0*  mean go right
+            // *0   00  00
+            else if (!junctionPixels[1] && junctionPixels[3])
+            {
+                //go right
+                curPosition.x++;
+            }
+            // **   0*  00  mean go down
+            // 0*   0*  0*
+            else if (!junctionPixels[0] && junctionPixels[1])
+            {
+                //go down
+                curPosition.y--;
+            }
+            //  00  0*  00  mean go left
+            //  *0  **  **
+            else if (junctionPixels[0] && !junctionPixels[2])
+            {
+                //go left
+                curPosition.x--;
+            }
+        } while (curPosition != startPosition);
+
+        return edge;
+    }
+
+    /// <summary>
+    /// Gets the four pixels that touch in a corner. Treats the edges of the texture as 1-wide 0-padding 
+    /// </summary>
+    /// <param name="junctionPixels"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    private void GetJunctionPixelsPadded(bool[] junctionPixels, int x, int y)
+    {
+        Rect rect = spriteRenderer.sprite.rect;
+        bool leftEdge = x == rect.min.x;
+        bool rightEdge = x == rect.max.x - 1;
+        bool bottomEdge = y == rect.min.y;
+        bool topEdge = y == rect.max.y - 1;
+        junctionPixels[0] = (!leftEdge && !bottomEdge) && AlphaThreshold(texture.GetPixel(x, y).a);
+        junctionPixels[1] = (!rightEdge && !bottomEdge) && AlphaThreshold(texture.GetPixel(x + 1, y).a);
+        junctionPixels[2] = (!leftEdge && !topEdge) && AlphaThreshold(texture.GetPixel(x, y + 1).a);
+        junctionPixels[3] = (!rightEdge && !topEdge) && AlphaThreshold(texture.GetPixel(x + 1, y + 1).a);
     }
 
     /// <summary>
