@@ -20,9 +20,9 @@ public class DestructibleTerrainTest : MonoBehaviour
     private Sprite sprite => spriteRenderer.sprite;
     private Texture2D texture => sprite.texture;
 
-    private bool[,] solidTextureSnapshot;
     // Flood fill maps
-    private Dictionary<Vector2Int, bool> _visited;
+    bool[,] visited;
+    private bool[,] solidTextureSnapshot;
     
     private void OnValidate()
     {
@@ -38,6 +38,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         texture.Apply();
         solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
+        visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         InputManager.MouseDown += UpdateTerrain;
     }
     
@@ -328,7 +329,7 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     
     static ProfilerMarker m_findRegions = new("FindRegions");
-    static ProfilerMarker m_createDict = new("CreateDict");
+    static ProfilerMarker m_createDict = new("Clear visited");
     /// <summary>
     /// Find all connected regions
     /// </summary>
@@ -337,14 +338,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         m_findRegions.Begin();
         m_createDict.Begin();
         //Construct boolean version of the textureKeep track of visited pixels
-        _visited = new Dictionary<Vector2Int, bool>();
-        for (int i = 0; i < sprite.rect.width; i++)
-        {
-            for (int j = 0; j < sprite.rect.height; j++)
-            {
-                _visited.Add(new Vector2Int(i, j), false);
-            }
-        }
+        visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         m_createDict.End();
         
         //Get all regions
@@ -353,15 +347,15 @@ public class DestructibleTerrainTest : MonoBehaviour
         {
             for (int j = 0; j < sprite.rect.height; j++)
             {
-                Vector2Int coords = new Vector2Int(i, j);
-                if (_visited[coords]) continue;   // Skip visited
+                // Vector2Int coords = new Vector2Int(i, j);
+                if (visited[i, j]) continue;   // Skip visited
                 if (!solidTextureSnapshot[i,j])      // Skip non-solid pixels
                 {
-                    _visited[coords] = true;
+                    visited[i, j] = true;
                     continue;
                 }
-                
-                regions.Add(FloodFill(coords));
+
+                regions.Add(FloodFill(new Vector2Int(i, j)));
             }
         }
         
@@ -381,7 +375,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         
         //The stack contains pixels that may have unvisited neighbors
         currentSearch.Push(start);
-        _visited[start] = true;
+        visited[start.x, start.y] = true;
         while (currentSearch.Count > 0)
         {
             List<Vector2Int> neighbors = NeighborsOfPixel(currentSearch.Peek());
@@ -389,8 +383,8 @@ public class DestructibleTerrainTest : MonoBehaviour
 
             foreach (Vector2Int neighbor in neighbors)
             {
-                if (_visited[neighbor]) continue;
-                _visited[neighbor] = true;
+                if (visited[neighbor.x, neighbor.y]) continue;
+                visited[neighbor.x, neighbor.y] = true;
                 
                 if (!solidTextureSnapshot[neighbor.x, neighbor.y]) continue;
                 currentSearch.Push(neighbor);
