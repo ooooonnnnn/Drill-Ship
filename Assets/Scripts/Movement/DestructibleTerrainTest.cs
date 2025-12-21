@@ -330,6 +330,9 @@ public class DestructibleTerrainTest : MonoBehaviour
     
     static ProfilerMarker m_findRegions = new("FindRegions");
     static ProfilerMarker m_createDict = new("Clear visited");
+    static ProfilerMarker m_lookForSolid = new("Look for solid");
+    static ProfilerMarker m_addFloodFill = new("Add flood fill");
+    static ProfilerMarker m_initRegionList = new("init Region List");
     /// <summary>
     /// Find all connected regions
     /// </summary>
@@ -342,20 +345,31 @@ public class DestructibleTerrainTest : MonoBehaviour
         m_createDict.End();
         
         //Get all regions
+        m_initRegionList.Begin();
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
+        m_initRegionList.End();
         for (int i = 0; i < sprite.rect.width; i++)
         {
             for (int j = 0; j < sprite.rect.height; j++)
             {
+                m_lookForSolid.Begin();
                 // Vector2Int coords = new Vector2Int(i, j);
-                if (visited[i, j]) continue;   // Skip visited
+                if (visited[i, j])
+                {
+                    m_lookForSolid.End();
+                    continue; // Skip visited
+                }
                 if (!solidTextureSnapshot[i,j])      // Skip non-solid pixels
                 {
                     visited[i, j] = true;
+                    m_lookForSolid.End();
                     continue;
                 }
+                m_lookForSolid.End();
 
+                m_addFloodFill.Begin();
                 regions.Add(FloodFill(new Vector2Int(i, j)));
+                m_addFloodFill.End();
             }
         }
         
