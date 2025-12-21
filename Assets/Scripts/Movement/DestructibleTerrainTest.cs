@@ -1,36 +1,36 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Helper;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Vector2 = UnityEngine.Vector2;
+using Unity.Profiling;
 
 public class DestructibleTerrainTest : MonoBehaviour
 {
     [SerializeField] private GameObject selfPrefab;
     [SerializeField] private float solidAlphaThreshold;
-    [SerializeField] private Sprite solidSpritePrerfab;
-    [SerializeField] private Sprite emptySpritePrerfab;
+    [SerializeField] private Sprite solidSpritePrefab;
+    [SerializeField] private Sprite emptySpritePrefab;
     [HideInInspector] [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Camera mainCam;
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
     [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
     private Sprite sprite => spriteRenderer.sprite;
     private Texture2D texture => spriteRenderer.sprite.texture;
+
+    private bool[,] solidTextureSnapshot;
     // Flood fill maps
-    private Dictionary<Vector2Int, bool> _solid;
     private Dictionary<Vector2Int, bool> _visited;
+    
 
 
     private void OnValidate()
     {
         polyCollider = GetComponent<PolygonCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        Texture2D newTexture = Instantiate(solidSpritePrerfab.texture);
+        Texture2D newTexture = Instantiate(solidSpritePrefab.texture);
         spriteRenderer.sprite = 
             Sprite.Create(
                 newTexture, new Rect(0, 0, newTexture.width, newTexture.height), new Vector2(0.5f, 0.5f));
@@ -39,6 +39,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     private void Awake()
     {
         texture.Apply();
+        solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         InputManager.MouseDown += UpdateTerrain;
         // print($"Original pivot: {spriteRenderer.sprite.pivot}");
     }
@@ -48,33 +49,29 @@ public class DestructibleTerrainTest : MonoBehaviour
         InputManager.MouseDown -= UpdateTerrain;
     }
 
-    // private void Start()
-    // {
-    //     //Test neighbors
-    //     Vector2Int pixel = Vector2Int.zero;
-    //     var neighbors = NeighborsOfPixel(pixel);
-    //     MyDebug.DrawX(PixelToWorld(pixel), .01f, Color.red, 10f);
-    //
-    //     print($"pixel: {pixel} has {((List<Vector2Int>)neighbors).Count} neighbors");
-    //     foreach (Vector2Int neighbor in neighbors)
-    //     {
-    //         print($"neighbor: {neighbor}, position {PixelToWorld(neighbor)}");
-    //         MyDebug.DrawX(PixelToWorld(neighbor), .01f, Color.red, 10f);
-    //     }
-    // }
-
     private void UpdateTerrain()
     {
-        //Dig
-        DeleteSquare();
+        //Read entire texture
+        Rect rect = sprite.rect;
+        var pixels = texture.GetPixels((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            int j = i / (int)rect.width;
+            solidTextureSnapshot[i % (int)rect.width, j] = pixels[i].a >= solidAlphaThreshold;
+        }
         
-        SeparateRegions();
+        //Dig
+        DeleteSquare(out bool textureChanged);
+        
+        if (textureChanged)
+        {
+            SeparateRegions();
 
-        //Assuming this object is one contiguous region, create a new poly collider 
-        UpdatePolyCol();
+            //Assuming this object is one contiguous region, create a new poly collider 
+            UpdatePolyCol();
+        }
     }
 
-        
     /// <summary>
     /// Separate contiguous regions into separate objects
     /// </summary>
@@ -84,7 +81,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         if (regions.Count == 1) return;     //No need to create new objects if there is only one region
         if (regions.Count == 0)
         {
-            print($"No solid regions in {gameObject.name}. Detroying");
+            print($"No solid regions in {gameObject.name}. Destroying");
             Destroy(gameObject);
         }
 
@@ -109,18 +106,17 @@ public class DestructibleTerrainTest : MonoBehaviour
             // print($"new pivot: {newPivot}");
             newSpriteRenderer.sprite = 
                 Sprite.Create(
-                    Instantiate(emptySpritePrerfab.texture),
-                    spriteRenderer.sprite.rect,
+                    Instantiate(emptySpritePrefab.texture),
+                    sprite.rect,
                     pivotNormalized);
             // newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
             
             // Only the relevant region is solid
              foreach (Vector2Int pixel in region)
              {
-                 newSpriteRenderer.sprite.texture.SetPixel(pixel.x, pixel.y, Color.white);
-                 // spriteRenderer.sprite.texture.SetPixel(pixel.x, pixel.y, Color.clear);
+                 sprite.texture.SetPixel(pixel.x, pixel.y, Color.white);
              }
-            newSpriteRenderer.sprite.texture.Apply();
+            sprite.texture.Apply();
             
             //Update collider on the new object
             newTerrain.UpdatePolyCol();
@@ -137,7 +133,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         }
     }
 
-    private void DeleteSquare()
+    private void DeleteSquare(out bool textureEdited)
     {
         Vector2 mousePos = Mouse.current.position.ReadValue();
         mousePos = mainCam.ScreenToWorldPoint(mousePos);
@@ -148,6 +144,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         Vector2 start = new Vector2(texturePos.x - width * 0.5f, texturePos.y - width * 0.5f);
         Vector2 end = new Vector2(texturePos.x + width * 0.5f, texturePos.y + width * 0.5f);
         
+        textureEdited = false;
         for (int x = (int)start.x; x < (int)end.x; x++)
         {
             if (x < 0 || x >= texture.width) continue;
@@ -155,14 +152,24 @@ public class DestructibleTerrainTest : MonoBehaviour
             {
                 if (y < 0 || y >= texture.height) continue;
                 texture.SetPixel(x, y, Color.clear);
+                textureEdited = true;
             }
         }
         
         texture.Apply();
     }
+    
+    private void DeleteSquare()
+    {
+        DeleteSquare(out var _);
+    }
+    
+    // private static readonly ProfilerMarker CodeMarker = new ProfilerMarker("SeparateRegions");
+    // private static readonly ProfilerMarker CodeMarker3 = new ProfilerMarker("UpdatePolyCol");
 
     public void UpdatePolyCol()
     {
+        //CodeMarker3.Begin();
         // polyCollider.pathCount = 0;
         // polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
         List<Vector2> edge = GetEdge()?.
@@ -172,42 +179,63 @@ public class DestructibleTerrainTest : MonoBehaviour
             ToList();
         polyCollider.pathCount = 0;
         if (edge == null) return;
+        
         polyCollider.SetPath(0,edge);
+        //CodeMarker3.End();
     }
 
+    private enum Direction
+    {
+        Up,
+        Down,
+        Left,
+        Right,
+        None
+    }
+    
+    // private static readonly ProfilerMarker CodeMarker2 = new ProfilerMarker("GetEdge.FindStartingPoint");
+    // private static readonly ProfilerMarker CodeMarker4 = new ProfilerMarker("GetEdge.MarchingSquares");
+    // private static readonly ProfilerMarker CodeMarker5 = new ProfilerMarker("GetJunctionPixelsPadded");
+    // private static readonly ProfilerMarker CodeMarker6 = new ProfilerMarker("Sum of junction pixels");
+    // private static readonly ProfilerMarker CodeMarker7 = new ProfilerMarker("");
+    
     /// <summary>
-    /// Gets the edge of the texture, ordered.
+    /// Gets the edge of the texture, ordered ccw. Using marching squares
     /// </summary>
     /// <returns></returns>
     [CanBeNull]
     private List<Vector2> GetEdge()
     {
+        //CodeMarker2.Begin();
         List<Vector2> edge = new();
         
-        //Use marching squares
         //Look for a junction of pixels that implies an edge
-        Rect rect = spriteRenderer.sprite.rect;
+        Rect rect = sprite.rect;
         Vector2Int startPosition = Vector2Int.zero;
         bool foundEdge = false;
-        for (int x = (int)rect.min.x; x < rect.max.x - 1; x++)
+        for (int x = 0; x < rect.width; x++)
         {
-            for (int y = (int)rect.min.y; y < rect.max.y - 1; y++)
+            for (int y = 0; y < rect.height; y++)
             {
+                //CodeMarker5.Begin();
                 //Get the values of the four pixels that touch in a corner
                 bool[] junctionPixels = { false, false, false, false };
                 GetJunctionPixelsPadded(junctionPixels, x, y);
+                //CodeMarker5.End();
 
                 //  0*  *0  **  00  mean nothing. discard them
                 //  *0  0*  **  00
-                
-                //check for the first two
-                int totalTrue = junctionPixels.Aggregate(0, (cur, value) => cur + (value ? 1 : 0));
-                if (junctionPixels[0] != junctionPixels[1] && junctionPixels[0] != junctionPixels[2] && totalTrue == 2)
+
+                //CodeMarker6.Begin();
+                int totalTrue = junctionPixels.Sum(pixel => pixel ? 1 : 0);
+                //CodeMarker6.End();
+                //check for the last two
+                if (totalTrue == 4 || totalTrue == 0)
                 {
                     continue;
                 }
-                //check for the last two
-                if (totalTrue == 4 || totalTrue == 0)
+                //check for the first two
+                if (junctionPixels[0] != junctionPixels[1] && junctionPixels[0] != junctionPixels[2] && totalTrue == 2)
                 {
                     continue;
                 }
@@ -221,41 +249,26 @@ public class DestructibleTerrainTest : MonoBehaviour
         }
         
         if (!foundEdge) return null;
-
+        
+        //CodeMarker2.End();
+        
+        //CodeMarker4.Begin();
+        Direction lastDirection = Direction.None;
+        Direction currentDirection = Direction.None;
         //Once found an initial pixel, start marching
         Vector2Int curPosition = startPosition;
         do
         {
-            edge.Add(curPosition);
+            if (currentDirection == Direction.None || lastDirection == Direction.None
+                                                   || lastDirection != currentDirection)
+                edge.Add(curPosition);
             MyDebug.DrawX(PixelToWorld(curPosition), .01f, Color.red, 1f);
             bool[] junctionPixels = {false, false, false, false};
+            if (curPosition.x < 0 || curPosition.x >= rect.width || curPosition.y < 0 || curPosition.y >= rect.height)
+                Debug.LogError("Out of bounds");
             GetJunctionPixelsPadded(junctionPixels, curPosition.x, curPosition.y);
-            //If the march reached out of the rect, go counterclockwise on the edge of the rect
-            // if (curPosition.x < rect.min.x)
-            // {
-            //     curPosition.y--;
-            //     if (curPosition.y < rect.min.y) curPosition.x++;
-            //     continue;
-            // }
-            // if (curPosition.y < rect.min.y)
-            // {
-            //     curPosition.x++;
-            //     if (curPosition.x >= rect.max.x - 1) curPosition.y++;
-            //     continue;
-            // }
-            // if (curPosition.x >= rect.max.x - 1)
-            // {
-            //     curPosition.y++;
-            //     if (curPosition.y >= rect.max.y - 1) curPosition.x--;
-            //     continue;
-            // }
-            // if (curPosition.y >= rect.max.y - 1)
-            // {
-            //     curPosition.x--;
-            //     if (curPosition.x < rect.min.x) curPosition.y--;
-            //     continue;
-            // }
             
+            lastDirection = currentDirection;
             //Any of the following patterns imply an edge
             // *0   *0  *0  mean go up
             // *0   00  **
@@ -263,6 +276,7 @@ public class DestructibleTerrainTest : MonoBehaviour
             {
                 //go up
                 curPosition.y++;
+                currentDirection = Direction.Up;
             }
             // **   **  0*  mean go right
             // *0   00  00
@@ -270,6 +284,7 @@ public class DestructibleTerrainTest : MonoBehaviour
             {
                 //go right
                 curPosition.x++;
+                currentDirection = Direction.Right;
             }
             // **   0*  00  mean go down
             // 0*   0*  0*
@@ -277,6 +292,7 @@ public class DestructibleTerrainTest : MonoBehaviour
             {
                 //go down
                 curPosition.y--;
+                currentDirection = Direction.Down;
             }
             //  00  0*  00  mean go left
             //  *0  **  **
@@ -284,9 +300,11 @@ public class DestructibleTerrainTest : MonoBehaviour
             {
                 //go left
                 curPosition.x--;
+                currentDirection = Direction.Left;
             }
         } while (curPosition != startPosition);
-
+        
+        //CodeMarker4.End();
         return edge;
     }
 
@@ -299,14 +317,14 @@ public class DestructibleTerrainTest : MonoBehaviour
     private void GetJunctionPixelsPadded(bool[] junctionPixels, int x, int y)
     {
         Rect rect = spriteRenderer.sprite.rect;
-        bool leftEdge = x == rect.min.x;
-        bool rightEdge = x == rect.max.x - 1;
-        bool bottomEdge = y == rect.min.y;
-        bool topEdge = y == rect.max.y - 1;
-        junctionPixels[0] = (!leftEdge && !bottomEdge) && AlphaThreshold(texture.GetPixel(x, y).a);
-        junctionPixels[1] = (!rightEdge && !bottomEdge) && AlphaThreshold(texture.GetPixel(x + 1, y).a);
-        junctionPixels[2] = (!leftEdge && !topEdge) && AlphaThreshold(texture.GetPixel(x, y + 1).a);
-        junctionPixels[3] = (!rightEdge && !topEdge) && AlphaThreshold(texture.GetPixel(x + 1, y + 1).a);
+        bool leftEdge = x == 0;
+        bool rightEdge = x == rect.width - 1;
+        bool bottomEdge = y == 0;
+        bool topEdge = y == rect.height - 1;
+        junctionPixels[0] = (!leftEdge && !bottomEdge) && solidTextureSnapshot[x, y];
+        junctionPixels[1] = (!rightEdge && !bottomEdge) && solidTextureSnapshot[x,y];
+        junctionPixels[2] = (!leftEdge && !topEdge) && solidTextureSnapshot[x,y];
+        junctionPixels[3] = (!rightEdge && !topEdge) && solidTextureSnapshot[x,y];
     }
 
     /// <summary>
@@ -315,29 +333,31 @@ public class DestructibleTerrainTest : MonoBehaviour
     private List<List<Vector2Int>> FindRegions()
     {
         //Construct boolean version of the textureKeep track of visited pixels
-        _solid = new Dictionary<Vector2Int, bool>();
         _visited = new Dictionary<Vector2Int, bool>();
-        for (int i = (int)sprite.rect.x; i < sprite.rect.width; i++)
+        for (int i = 0; i < sprite.rect.width; i++)
         {
-            for (int j = (int)sprite.rect.y; j < sprite.rect.height; j++)
+            for (int j = 0; j < sprite.rect.height; j++)
             {
-                _solid.Add(new Vector2Int(i, j), AlphaThreshold(texture.GetPixel(i, j).a));
                 _visited.Add(new Vector2Int(i, j), false);
             }
         }
         
         //Get all regions
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
-        foreach (KeyValuePair<Vector2Int, bool> pixelSolid in _solid)
+        for (int i = 0; i < sprite.rect.width; i++)
         {
-            if (_visited[pixelSolid.Key]) continue;   // Skip visited
-            if (!pixelSolid.Value)      // Skip non-solid pixels
+            for (int j = 0; j < sprite.rect.height; j++)
             {
-                _visited[pixelSolid.Key] = true;
-                continue;
+                Vector2Int coords = new Vector2Int(i, j);
+                if (_visited[coords]) continue;   // Skip visited
+                if (!solidTextureSnapshot[i,j])      // Skip non-solid pixels
+                {
+                    _visited[coords] = true;
+                    continue;
+                }
+                
+                regions.Add(FloodFill(coords));
             }
-            
-            regions.Add(FloodFill(pixelSolid.Key));
         }
         
         return regions;
@@ -347,7 +367,7 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     private List<Vector2Int> FloodFill(Vector2Int start)
     {
-        if (!_solid[start]) Debug.LogError("Trying to flood fill from non-solid pixel");
+        if (!solidTextureSnapshot[start.x, start.y]) Debug.LogError("Trying to flood fill from non-solid pixel");
 
         List<Vector2Int> region = new();
         Stack<Vector2Int> currentSearch = new();
@@ -365,7 +385,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                 if (_visited[neighbor]) continue;
                 _visited[neighbor] = true;
                 
-                if (!_solid[neighbor]) continue;
+                if (!solidTextureSnapshot[neighbor.x, neighbor.y]) continue;
                 currentSearch.Push(neighbor);
             }
             
