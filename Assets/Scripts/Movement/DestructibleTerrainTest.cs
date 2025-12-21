@@ -18,14 +18,12 @@ public class DestructibleTerrainTest : MonoBehaviour
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
     [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
     private Sprite sprite => spriteRenderer.sprite;
-    private Texture2D texture => spriteRenderer.sprite.texture;
+    private Texture2D texture => sprite.texture;
 
     private bool[,] solidTextureSnapshot;
     // Flood fill maps
     private Dictionary<Vector2Int, bool> _visited;
     
-
-
     private void OnValidate()
     {
         polyCollider = GetComponent<PolygonCollider2D>();
@@ -52,24 +50,18 @@ public class DestructibleTerrainTest : MonoBehaviour
     private void UpdateTerrain()
     {
         //Read entire texture
-        Rect rect = sprite.rect;
-        var pixels = texture.GetPixels((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            int j = i / (int)rect.width;
-            solidTextureSnapshot[i % (int)rect.width, j] = pixels[i].a >= solidAlphaThreshold;
-        }
+        TextureUtils.ReadTextureToBoolArr(sprite, solidTextureSnapshot, solidAlphaThreshold);
         
         //Dig
         DeleteSquare(out bool textureChanged);
         
-        if (textureChanged)
-        {
-            SeparateRegions();
+        SeparateRegions();
 
-            //Assuming this object is one contiguous region, create a new poly collider 
-            UpdatePolyCol();
-        }
+        //Assuming this object is one contiguous region, create a new poly collider
+        UpdatePolyCol();
+        
+        //Write entire texture
+        TextureUtils.WriteBoolArrToTexture(sprite, solidTextureSnapshot);
     }
 
     /// <summary>
@@ -103,34 +95,27 @@ public class DestructibleTerrainTest : MonoBehaviour
                 (newPivot.x - spriteRect.x) / spriteRect.width,
                 (newPivot.y - spriteRect.y) / spriteRect.height
             );
-            // print($"new pivot: {newPivot}");
             newSpriteRenderer.sprite = 
                 Sprite.Create(
                     Instantiate(emptySpritePrefab.texture),
                     sprite.rect,
                     pivotNormalized);
-            // newTerrain.texture = Instantiate(emptySpritePrerfab.texture);
             
+            bool[,] newTexture = new bool[solidTextureSnapshot.GetLength(0), solidTextureSnapshot.GetLength(1)];
             // Only the relevant region is solid
-             foreach (Vector2Int pixel in region)
-             {
-                 sprite.texture.SetPixel(pixel.x, pixel.y, Color.white);
-             }
-            sprite.texture.Apply();
+            foreach (Vector2Int pixel in region) 
+            {
+                newTexture[pixel.x, pixel.y] = true;
+            }
+            newTerrain.solidTextureSnapshot = newTexture;
+            TextureUtils.WriteBoolArrToTexture(newSpriteRenderer.sprite, newTexture);
             
             //Update collider on the new object
             newTerrain.UpdatePolyCol();
-            
-            //Self destruct
-            Destroy(gameObject);
-            
-            // Color color = MyColors.RandomColor;
-            // foreach (Vector2Int pixel in region)
-            // {
-            //     texture.SetPixel(pixel.x, pixel.y, color);
-            // }
-            // texture.Apply();
         }
+        
+        //Self destruct
+        Destroy(gameObject);
     }
 
     private void DeleteSquare(out bool textureEdited)
@@ -151,12 +136,10 @@ public class DestructibleTerrainTest : MonoBehaviour
             for (int y = (int)start.y; y < (int)end.y; y++)
             {
                 if (y < 0 || y >= texture.height) continue;
-                texture.SetPixel(x, y, Color.clear);
+                solidTextureSnapshot[x, y] = false;
                 textureEdited = true;
             }
         }
-        
-        texture.Apply();
     }
     
     private void DeleteSquare()
@@ -257,6 +240,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         Direction currentDirection = Direction.None;
         //Once found an initial pixel, start marching
         Vector2Int curPosition = startPosition;
+        bool quit = false;
         do
         {
             if (currentDirection == Direction.None || lastDirection == Direction.None
@@ -302,7 +286,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                 curPosition.x--;
                 currentDirection = Direction.Left;
             }
-        } while (curPosition != startPosition);
+        } while (curPosition != startPosition && !quit);
         
         //CodeMarker4.End();
         return edge;
@@ -316,15 +300,15 @@ public class DestructibleTerrainTest : MonoBehaviour
     /// <param name="y"></param>
     private void GetJunctionPixelsPadded(bool[] junctionPixels, int x, int y)
     {
-        Rect rect = spriteRenderer.sprite.rect;
+        Rect rect = sprite.rect;
         bool leftEdge = x == 0;
-        bool rightEdge = x == rect.width - 1;
+        bool rightEdge = x == (int)rect.width - 1;
         bool bottomEdge = y == 0;
-        bool topEdge = y == rect.height - 1;
-        junctionPixels[0] = (!leftEdge && !bottomEdge) && solidTextureSnapshot[x, y];
-        junctionPixels[1] = (!rightEdge && !bottomEdge) && solidTextureSnapshot[x,y];
-        junctionPixels[2] = (!leftEdge && !topEdge) && solidTextureSnapshot[x,y];
-        junctionPixels[3] = (!rightEdge && !topEdge) && solidTextureSnapshot[x,y];
+        bool topEdge = y == (int)rect.height - 1;
+        junctionPixels[0] = (!leftEdge && !bottomEdge) && solidTextureSnapshot[x,y];
+        junctionPixels[1] = (!rightEdge && !bottomEdge) && solidTextureSnapshot[x + 1,y];
+        junctionPixels[2] = (!leftEdge && !topEdge) && solidTextureSnapshot[x,y + 1];
+        junctionPixels[3] = (!rightEdge && !topEdge) && solidTextureSnapshot[x + 1,y + 1];
     }
 
     /// <summary>
@@ -362,8 +346,6 @@ public class DestructibleTerrainTest : MonoBehaviour
         
         return regions;
     }
-
-    private bool AlphaThreshold(float alpha) => alpha > solidAlphaThreshold;
 
     private List<Vector2Int> FloodFill(Vector2Int start)
     {
