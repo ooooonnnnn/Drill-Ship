@@ -10,12 +10,12 @@ using Unity.Profiling;
 
 public class DestructibleTerrainTest : MonoBehaviour
 {
-    [SerializeField] private PrefabReference selfPrefabRef;
-    private GameObject selfPrefab;
+    // [SerializeField] private PrefabReference selfPrefabRef;
+    [SerializeField] private GameObject selfPrefab;
     [SerializeField] private float solidAlphaThreshold;
     [SerializeField] private Sprite solidSpritePrefab;
     [SerializeField] private Sprite emptySpritePrefab;
-    [HideInInspector] [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Camera mainCam;
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
     [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
@@ -38,13 +38,19 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     private void Awake()
     {
-        texture.Apply();
+        // texture.Apply();
+        if (!sprite)
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
         solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
 
-        selfPrefab = selfPrefabRef.prefab;
+        // selfPrefab = selfPrefabRef.prefab;
         // InputManager.MouseDown += UpdateTerrain;
         mainCam = Camera.main;
+        //TODO: delete this
+        if (!mainCam) Destroy(gameObject);
     }
 
     private void OnDestroy()
@@ -52,7 +58,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         // InputManager.MouseDown -= UpdateTerrain;
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         if (InputManager.LmbDown) UpdateTerrain();
     }
@@ -97,13 +103,13 @@ public class DestructibleTerrainTest : MonoBehaviour
     /// </summary>
     private void SeparateRegions()
     {
-        print($"{gameObject.name} Separate Regions");
+        // print($"{gameObject.name} Separate Regions");
         
         List<List<Vector2Int>> regions = FindRegions();
         if (regions.Count == 1) return;     //No need to create new objects if there is only one region
         if (regions.Count == 0)
         {
-            print($"No solid regions in {gameObject.name}. Destroying");
+            // print($"No solid regions in {gameObject.name}. Destroying");
             Destroy(gameObject);
         }
 
@@ -172,13 +178,13 @@ public class DestructibleTerrainTest : MonoBehaviour
         }
     }
     
-    private static readonly ProfilerMarker m_updateCol = new ProfilerMarker("UpdatePolyCol");
+    // private static readonly ProfilerMarker m_updateCol = new ProfilerMarker("UpdatePolyCol");
 
     public void UpdatePolyCol()
     {
-        m_updateCol.Begin();
+        // m_updateCol.Begin();
         
-        print($"{gameObject.GetInstanceID()} UpdatePolyCol");
+        // print($"{gameObject.GetInstanceID()} UpdatePolyCol");
         List<Vector2> edge = GetEdge()?.
             Select(
                 pix => (Vector2)transform.InverseTransformPoint(
@@ -188,7 +194,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         if (edge == null) return;
         
         polyCollider.SetPath(0,edge);
-        m_updateCol.End();
+        // m_updateCol.End();
     }
 
     private enum Direction
