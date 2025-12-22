@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Helper;
@@ -39,12 +40,17 @@ public class DestructibleTerrainTest : MonoBehaviour
         texture.Apply();
         solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
-        InputManager.MouseDown += UpdateTerrain;
+        // InputManager.MouseDown += UpdateTerrain;
     }
     
     private void OnDestroy()
     {
-        InputManager.MouseDown -= UpdateTerrain;
+        // InputManager.MouseDown -= UpdateTerrain;
+    }
+
+    private void FixedUpdate()
+    {
+        if (InputManager.LmbDown) UpdateTerrain();
     }
 
     private static ProfilerMarker m_dig = new("m_dig");
@@ -64,6 +70,8 @@ public class DestructibleTerrainTest : MonoBehaviour
         m_dig.Begin();
         DeleteSquare(out bool textureChanged);
         m_dig.End();
+        
+        if (!textureChanged) return;
         
         m_separate.Begin();
         SeparateRegions();
@@ -85,6 +93,8 @@ public class DestructibleTerrainTest : MonoBehaviour
     /// </summary>
     private void SeparateRegions()
     {
+        print($"{gameObject.name} Separate Regions");
+        
         List<List<Vector2Int>> regions = FindRegions();
         if (regions.Count == 1) return;     //No need to create new objects if there is only one region
         if (regions.Count == 0)
@@ -97,7 +107,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         {
             //Find the center of mass
             Vector2 center = region.Aggregate(Vector2.zero, (current, pixel) => current + PixelToWorld(pixel)) / region.Count;
-            // MyDebug.DrawX(center, .1f, Color.red, 1f);
+            MyDebug.DrawX(center, .1f, Color.red, 1f);
             
             //Create a new object at the center of mass
             GameObject newObject = Instantiate(selfPrefab, center, transform.rotation);
@@ -163,14 +173,13 @@ public class DestructibleTerrainTest : MonoBehaviour
         DeleteSquare(out var _);
     }
     
-    // private static readonly ProfilerMarker CodeMarker = new ProfilerMarker("SeparateRegions");
-    // private static readonly ProfilerMarker CodeMarker3 = new ProfilerMarker("UpdatePolyCol");
+    private static readonly ProfilerMarker m_updateCol = new ProfilerMarker("UpdatePolyCol");
 
     public void UpdatePolyCol()
     {
-        //CodeMarker3.Begin();
-        // polyCollider.pathCount = 0;
-        // polyCollider.SetPath(0, new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) });
+        m_updateCol.Begin();
+        
+        print($"{gameObject.GetInstanceID()} UpdatePolyCol");
         List<Vector2> edge = GetEdge()?.
             Select(
                 pix => (Vector2)transform.InverseTransformPoint(
@@ -180,7 +189,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         if (edge == null) return;
         
         polyCollider.SetPath(0,edge);
-        //CodeMarker3.End();
+        m_updateCol.End();
     }
 
     private enum Direction
@@ -262,7 +271,7 @@ public class DestructibleTerrainTest : MonoBehaviour
             if (currentDirection == Direction.None || lastDirection == Direction.None
                                                    || lastDirection != currentDirection)
                 edge.Add(curPosition);
-            MyDebug.DrawX(PixelToWorld(curPosition), .01f, Color.red, 1f);
+            // MyDebug.DrawX(PixelToWorld(curPosition), .01f, Color.red, 1f);
             bool[] junctionPixels = {false, false, false, false};
             if (curPosition.x < 0 || curPosition.x >= rect.width || curPosition.y < 0 || curPosition.y >= rect.height)
                 Debug.LogError("Out of bounds");
@@ -330,7 +339,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     
     static ProfilerMarker m_findRegions = new("FindRegions");
     static ProfilerMarker m_createDict = new("Clear visited");
-    static ProfilerMarker m_lookForSolid = new("Look for solid");
+    static ProfilerMarker m_lookForSolid = new("Algorithm");
     static ProfilerMarker m_addFloodFill = new("Add flood fill");
     static ProfilerMarker m_initRegionList = new("init Region List");
     /// <summary>
@@ -348,30 +357,28 @@ public class DestructibleTerrainTest : MonoBehaviour
         m_initRegionList.Begin();
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
         m_initRegionList.End();
+        m_lookForSolid.Begin();
         for (int i = 0; i < sprite.rect.width; i++)
         {
             for (int j = 0; j < sprite.rect.height; j++)
             {
-                m_lookForSolid.Begin();
                 // Vector2Int coords = new Vector2Int(i, j);
                 if (visited[i, j])
                 {
-                    m_lookForSolid.End();
                     continue; // Skip visited
                 }
                 if (!solidTextureSnapshot[i,j])      // Skip non-solid pixels
                 {
                     visited[i, j] = true;
-                    m_lookForSolid.End();
                     continue;
                 }
-                m_lookForSolid.End();
 
                 m_addFloodFill.Begin();
                 regions.Add(FloodFill(new Vector2Int(i, j)));
                 m_addFloodFill.End();
             }
         }
+        m_lookForSolid.End();
         
         m_findRegions.End();
         return regions;

@@ -1,6 +1,8 @@
 using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
+
 namespace Custom_Inspector
 {
     [CustomEditor(typeof(EmptySpriteCreator))]
@@ -17,3 +19,5 @@ namespace Custom_Inspector
         }
     }
 }
+
+#endif

@@ -7,13 +7,22 @@ public class InputManager : MonoBehaviour
     public static event Action MouseUp;
     public static event Action MouseDown;
     public static event Action OnInteract;
+    public static bool LmbDown { get; private set;}
     
     
     private void Awake()
     {
         actions = new InputSystem_Actions();
-        actions.Player.Attack.performed += (_) => MouseDown?.Invoke();
-        actions.Player.Attack.canceled += (_) => MouseUp?.Invoke();
+        actions.Player.Attack.performed += (_) =>
+        {
+            MouseDown?.Invoke();
+            LmbDown = true;
+        };
+        actions.Player.Attack.canceled += (_) =>
+        {
+            MouseUp?.Invoke();
+            LmbDown = false;
+        };
         actions.Player.Interact.performed += _ => OnInteract?.Invoke();
     }
     
