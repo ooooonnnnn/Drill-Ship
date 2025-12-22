@@ -38,7 +38,6 @@ public class DestructibleTerrainTest : MonoBehaviour
 
     private void Awake()
     {
-        // texture.Apply();
         if (!sprite)
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
@@ -46,56 +45,37 @@ public class DestructibleTerrainTest : MonoBehaviour
         solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
 
-        // selfPrefab = selfPrefabRef.prefab;
-        // InputManager.MouseDown += UpdateTerrain;
         mainCam = Camera.main;
-        //TODO: delete this
-        if (!mainCam) Destroy(gameObject);
-    }
-
-    private void OnDestroy()
-    {
-        // InputManager.MouseDown -= UpdateTerrain;
     }
 
     private void Update()
     {
-        if (InputManager.LmbDown) UpdateTerrain();
+        if (InputManager.LmbDown)
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            mousePos = mainCam.ScreenToWorldPoint(mousePos);
+            float radius = 0.2f;
+            UpdateTerrain(mousePos, radius);
+        }
     }
-
-    private static ProfilerMarker m_dig = new("m_dig");
-    private static ProfilerMarker m_read = new("read");
-    private static ProfilerMarker m_write = new("write");
-    private static ProfilerMarker m_separate = new("separate");
-    private static ProfilerMarker m_updateCOl = new("updateCOl");
     
-    private void UpdateTerrain()
+    public void UpdateTerrain(Vector2 worldCenter, float radius)
     {
         //Read entire texture
-        m_read.Begin();
         TextureUtils.ReadTextureToBoolArr(sprite, solidTextureSnapshot, solidAlphaThreshold);
-        m_read.End();
         
         //Dig
-        m_dig.Begin();
-        DeleteSquare(out bool textureChanged);
-        m_dig.End();
+        DeleteSphere(worldCenter, radius, out bool textureChanged);
         
         if (!textureChanged) return;
         
-        m_separate.Begin();
         SeparateRegions();
-        m_separate.End();
 
         //Assuming this object is one contiguous region, create a new poly collider
-        m_updateCOl.Begin();
         UpdatePolyCol();
-        m_updateCOl.End();
         
         //Write entire texture
-        m_write.Begin();
         TextureUtils.WriteBoolArrToTexture(sprite, solidTextureSnapshot);
-        m_write.End();
     }
 
     /// <summary>
@@ -173,6 +153,32 @@ public class DestructibleTerrainTest : MonoBehaviour
                 if (!solidTextureSnapshot[x, y]) continue;
                 
                 solidTextureSnapshot[x, y] = false;
+                textureEdited = true;
+            }
+        }
+    }
+
+    private void DeleteSphere(Vector2 worldCenter, float radius, out bool textureEdited)
+    {
+        textureEdited = false;
+        
+        //Check center is in range of the sprite bounds
+        float sqrDistance = spriteRenderer.bounds.SqrDistance(worldCenter);
+        float sqrRadius = radius * radius;
+        if (sqrDistance > sqrRadius) return;
+        
+        Vector2Int spriteSpaceCenter = WorldToPixel(worldCenter).RoundToInt();
+        float spriteSpaceSquaredRadius = sqrRadius * sprite.pixelsPerUnit * sprite.pixelsPerUnit;
+        
+        for (int i = 0; i < solidTextureSnapshot.GetLength(0); i++)
+        {
+            for (int j = 0; j < solidTextureSnapshot.GetLength(1); j++)
+            {
+                float pixelSqrDistance = (new Vector2Int(i,j) - spriteSpaceCenter).sqrMagnitude;
+                if (pixelSqrDistance > spriteSpaceSquaredRadius) continue;
+                if (!solidTextureSnapshot[i, j]) continue;
+                
+                solidTextureSnapshot[i, j] = false;
                 textureEdited = true;
             }
         }
@@ -263,19 +269,27 @@ public class DestructibleTerrainTest : MonoBehaviour
         
         if (!foundEdge) return null;
         
-        //CodeMarker2.End();
-        
-        //CodeMarker4.Begin();
         Direction lastDirection = Direction.None;
         Direction currentDirection = Direction.None;
         //Once found an initial pixel, start marching
         Vector2Int curPosition = startPosition;
-        bool quit = false;
+        Vector2Int lastPosition = startPosition;
+        int loops = 0;
         do
         {
-            if (currentDirection == Direction.None || lastDirection == Direction.None
-                                                   || lastDirection != currentDirection)
+            loops++;
+            //Determine whether to save the new position
+            if (currentDirection == Direction.None || lastDirection == Direction.None)
+            {
+                lastPosition = curPosition;
                 edge.Add(curPosition);
+            }
+            else if (currentDirection != lastDirection && (curPosition - lastPosition).sqrMagnitude > 100)
+            {
+                lastPosition = curPosition;
+                edge.Add(curPosition);
+            }
+            
             // MyDebug.DrawX(PixelToWorld(curPosition), .01f, Color.red, 1f);
             bool[] junctionPixels = {false, false, false, false};
             if (curPosition.x < 0 || curPosition.x >= rect.width || curPosition.y < 0 || curPosition.y >= rect.height)
@@ -316,9 +330,10 @@ public class DestructibleTerrainTest : MonoBehaviour
                 curPosition.x--;
                 currentDirection = Direction.Left;
             }
-        } while (curPosition != startPosition && !quit);
+        } while (curPosition != startPosition);
         
         //CodeMarker4.End();
+        print($"looped {loops} times to find {edge.Count} edge points");
         return edge;
     }
 
