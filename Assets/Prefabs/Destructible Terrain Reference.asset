@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dda2ca2cd10ea0b439b6cfc1fe5938db, type: 3}
+  m_Name: Destructible Terrain Reference
+  m_EditorClassIdentifier: Assembly-CSharp::PrefabReference
+  prefab: {fileID: 9027875901408125017, guid: ec71212b69ad421438bc9da4253de8ad, type: 3}

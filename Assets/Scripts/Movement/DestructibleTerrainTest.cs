@@ -10,7 +10,8 @@ using Unity.Profiling;
 
 public class DestructibleTerrainTest : MonoBehaviour
 {
-    [SerializeField] private GameObject selfPrefab;
+    [SerializeField] private PrefabReference selfPrefabRef;
+    private GameObject selfPrefab;
     [SerializeField] private float solidAlphaThreshold;
     [SerializeField] private Sprite solidSpritePrefab;
     [SerializeField] private Sprite emptySpritePrefab;
@@ -40,9 +41,12 @@ public class DestructibleTerrainTest : MonoBehaviour
         texture.Apply();
         solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
+
+        selfPrefab = selfPrefabRef.prefab;
         // InputManager.MouseDown += UpdateTerrain;
+        mainCam = Camera.main;
     }
-    
+
     private void OnDestroy()
     {
         // InputManager.MouseDown -= UpdateTerrain;
@@ -112,8 +116,6 @@ public class DestructibleTerrainTest : MonoBehaviour
             //Create a new object at the center of mass
             GameObject newObject = Instantiate(selfPrefab, center, transform.rotation);
             DestructibleTerrainTest newTerrain = newObject.GetComponent<DestructibleTerrainTest>();
-            newTerrain.enabled = true;
-            newObject.GetComponent<PolygonCollider2D>().enabled = true;
             SpriteRenderer newSpriteRenderer = newObject.GetComponent<SpriteRenderer>();
             Vector2 newPivot = WorldToPixel(center);
             Rect spriteRect = spriteRenderer.sprite.rect;
