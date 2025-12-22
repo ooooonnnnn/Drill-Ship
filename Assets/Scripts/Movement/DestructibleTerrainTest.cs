@@ -160,19 +160,16 @@ public class DestructibleTerrainTest : MonoBehaviour
         textureEdited = false;
         for (int x = (int)start.x; x < (int)end.x; x++)
         {
-            if (x < 0 || x >= texture.width) continue;
+            if (x < 0 || x >= sprite.rect.width) continue;
             for (int y = (int)start.y; y < (int)end.y; y++)
             {
-                if (y < 0 || y >= texture.height) continue;
+                if (y < 0 || y >= sprite.rect.height) continue;
+                if (!solidTextureSnapshot[x, y]) continue;
+                
                 solidTextureSnapshot[x, y] = false;
                 textureEdited = true;
             }
         }
-    }
-    
-    private void DeleteSquare()
-    {
-        DeleteSquare(out var _);
     }
     
     private static readonly ProfilerMarker m_updateCol = new ProfilerMarker("UpdatePolyCol");
