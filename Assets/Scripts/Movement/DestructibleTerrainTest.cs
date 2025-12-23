@@ -278,6 +278,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         do
         {
             loops++;
+            MyDebug.DrawX(PixelToWorld(curPosition), .01f, Color.red, 1f);
             //Determine whether to save the new position
             if (currentDirection == Direction.None || lastDirection == Direction.None)
             {
@@ -330,10 +331,10 @@ public class DestructibleTerrainTest : MonoBehaviour
                 curPosition.x--;
                 currentDirection = Direction.Left;
             }
-        } while (curPosition != startPosition);
+        } while (curPosition != startPosition && loops < 10_000);
         
-        //CodeMarker4.End();
-        print($"looped {loops} times to find {edge.Count} edge points");
+        // print($"looped {loops} times to find {edge.Count} edge points");
+        if (loops >= 10_000) print("Edge looped too many times");
         return edge;
     }
 
@@ -356,28 +357,16 @@ public class DestructibleTerrainTest : MonoBehaviour
         junctionPixels[3] = (!rightEdge && !topEdge) && solidTextureSnapshot[x + 1,y + 1];
     }
 
-    
-    static ProfilerMarker m_findRegions = new("FindRegions");
-    static ProfilerMarker m_createDict = new("Clear visited");
-    static ProfilerMarker m_lookForSolid = new("Algorithm");
-    static ProfilerMarker m_addFloodFill = new("Add flood fill");
-    static ProfilerMarker m_initRegionList = new("init Region List");
     /// <summary>
     /// Find all connected regions
     /// </summary>
     private List<List<Vector2Int>> FindRegions()
     {
-        m_findRegions.Begin();
-        m_createDict.Begin();
         //Construct boolean version of the textureKeep track of visited pixels
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
-        m_createDict.End();
         
         //Get all regions
-        m_initRegionList.Begin();
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
-        m_initRegionList.End();
-        m_lookForSolid.Begin();
         for (int i = 0; i < sprite.rect.width; i++)
         {
             for (int j = 0; j < sprite.rect.height; j++)
@@ -393,22 +382,15 @@ public class DestructibleTerrainTest : MonoBehaviour
                     continue;
                 }
 
-                m_addFloodFill.Begin();
                 regions.Add(FloodFill(new Vector2Int(i, j)));
-                m_addFloodFill.End();
             }
         }
-        m_lookForSolid.End();
         
-        m_findRegions.End();
         return regions;
     }
-
     
-    static ProfilerMarker m_floodFill = new("FloodFill");
     private List<Vector2Int> FloodFill(Vector2Int start)
     {
-        m_floodFill.Begin();
         if (!solidTextureSnapshot[start.x, start.y]) Debug.LogError("Trying to flood fill from non-solid pixel");
 
         List<Vector2Int> region = new();
@@ -432,7 +414,6 @@ public class DestructibleTerrainTest : MonoBehaviour
             }
             
         }
-        m_floodFill.End();
         return region;
     }
 
