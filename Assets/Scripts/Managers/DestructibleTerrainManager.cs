@@ -7,7 +7,7 @@ public class DestructibleTerrainManager : MonoBehaviour
     public static DestructibleTerrainManager Instance { get; private set; }
     private Dictionary<int, DestructibleTerrainTest> terrainsByID = new ();
 
-    private void OnValidate()
+    private void Awake()
     {
         Instance = this;
     }
