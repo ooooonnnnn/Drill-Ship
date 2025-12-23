@@ -54,7 +54,8 @@ MonoBehaviour:
   spriteRenderer: {fileID: 6646667876845725307}
   mainCam: {fileID: 0}
   polyCollider: {fileID: 5005111697051698417}
-  isOriginalTerrain: 0
+  rb: {fileID: 7689948798151475695}
+  isOriginalTerrain: 1
 --- !u!212 &6646667876845725307
 SpriteRenderer:
   serializedVersion: 2
@@ -173,7 +174,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9027875901408125017}
-  m_BodyType: 0
+  m_BodyType: 2
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0

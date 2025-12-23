@@ -17,6 +17,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Camera mainCam;
     [HideInInspector] [SerializeField] private PolygonCollider2D polyCollider;
+    [HideInInspector] [SerializeField] private Rigidbody2D rb;
     [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
     private Sprite sprite => spriteRenderer.sprite;
     private Texture2D texture => sprite.texture;
@@ -34,6 +35,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         spriteRenderer.sprite = 
             Sprite.Create(
                 newTexture, new Rect(0, 0, newTexture.width, newTexture.height), new Vector2(0.5f, 0.5f));
+        rb = GetComponent<Rigidbody2D>();
     }
 
     private void Awake()
@@ -52,19 +54,10 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         manager = DestructibleTerrainManager.Instance;
         manager.AddTerrain(this);
+        
+        if (!isOriginalTerrain) rb.bodyType = RigidbodyType2D.Dynamic;
     }
 
-    // private void Update()
-    // {
-    //     if (InputManager.LmbDown)
-    //     {
-    //         Vector2 mousePos = Mouse.current.position.ReadValue();
-    //         mousePos = mainCam.ScreenToWorldPoint(mousePos);
-    //         float radius = 0.2f;
-    //         UpdateTerrain(mousePos, radius);
-    //     }
-    // }
-    
     public void DigSphere(Vector2 worldCenter, float radius)
     {
         //Read entire texture
@@ -110,7 +103,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     {
         // print($"{gameObject.name} Separate Regions");
         
-        List<List<Vector2Int>> regions = FindRegions();
+        List<List<Vector2Int>> regions = FindRegions(out int indexOfLargestRegion);
         if (regions.Count == 1) return;     //No need to create new objects if there is only one region
         if (regions.Count == 0)
         {
@@ -118,8 +111,10 @@ public class DestructibleTerrainTest : MonoBehaviour
             DestroyAndRemoveFromManager();
         }
 
+        int index = -1;
         foreach (List<Vector2Int> region in regions)
         {
+            index++;
             //Find the center of mass
             Vector2 center = region.Aggregate(Vector2.zero, (current, pixel) => current + PixelToWorld(pixel)) / region.Count;
             MyDebug.DrawX(center, .1f, Color.red, 1f);
@@ -151,6 +146,10 @@ public class DestructibleTerrainTest : MonoBehaviour
             
             //Update collider on the new object
             newTerrain.UpdatePolyCol();
+            
+            //Pass down isOriginalTerrain flag
+            if (isOriginalTerrain && index == indexOfLargestRegion) newTerrain.isOriginalTerrain = true;
+            else newTerrain.isOriginalTerrain = false;
         }
         
         //Self destruct
@@ -235,13 +234,8 @@ public class DestructibleTerrainTest : MonoBehaviour
         }
     }
     
-    // private static readonly ProfilerMarker m_updateCol = new ProfilerMarker("UpdatePolyCol");
-
     public void UpdatePolyCol()
     {
-        // m_updateCol.Begin();
-        
-        // print($"{gameObject.GetInstanceID()} UpdatePolyCol");
         List<Vector2> edge = GetEdge()?.
             Select(
                 pix => (Vector2)transform.InverseTransformPoint(
@@ -251,7 +245,6 @@ public class DestructibleTerrainTest : MonoBehaviour
         if (edge == null) return;
         
         polyCollider.SetPath(0,edge);
-        // m_updateCol.End();
     }
 
     private enum Direction
@@ -263,12 +256,6 @@ public class DestructibleTerrainTest : MonoBehaviour
         None
     }
     
-    // private static readonly ProfilerMarker CodeMarker2 = new ProfilerMarker("GetEdge.FindStartingPoint");
-    // private static readonly ProfilerMarker CodeMarker4 = new ProfilerMarker("GetEdge.MarchingSquares");
-    // private static readonly ProfilerMarker CodeMarker5 = new ProfilerMarker("GetJunctionPixelsPadded");
-    // private static readonly ProfilerMarker CodeMarker6 = new ProfilerMarker("Sum of junction pixels");
-    // private static readonly ProfilerMarker CodeMarker7 = new ProfilerMarker("");
-    
     /// <summary>
     /// Gets the edge of the texture, ordered ccw. Using marching squares
     /// </summary>
@@ -276,7 +263,6 @@ public class DestructibleTerrainTest : MonoBehaviour
     [CanBeNull]
     private List<Vector2> GetEdge()
     {
-        //CodeMarker2.Begin();
         List<Vector2> edge = new();
         
         //Look for a junction of pixels that implies an edge
@@ -411,13 +397,15 @@ public class DestructibleTerrainTest : MonoBehaviour
     /// <summary>
     /// Find all connected regions
     /// </summary>
-    private List<List<Vector2Int>> FindRegions()
+    private List<List<Vector2Int>> FindRegions(out int indexOfLargest)
     {
         //Construct boolean version of the textureKeep track of visited pixels
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         
         //Get all regions
         List<List<Vector2Int>> regions = new List<List<Vector2Int>>();
+        int largestArea = 0;
+        indexOfLargest = -1;
         for (int i = 0; i < sprite.rect.width; i++)
         {
             for (int j = 0; j < sprite.rect.height; j++)
@@ -433,14 +421,19 @@ public class DestructibleTerrainTest : MonoBehaviour
                     continue;
                 }
 
-                regions.Add(FloodFill(new Vector2Int(i, j)));
+                regions.Add(FloodFill(new Vector2Int(i, j), out int area));
+                if (area > largestArea)
+                {
+                    indexOfLargest = regions.Count - 1;
+                    largestArea = area;
+                }
             }
         }
         
         return regions;
     }
     
-    private List<Vector2Int> FloodFill(Vector2Int start)
+    private List<Vector2Int> FloodFill(Vector2Int start, out int area)
     {
         if (!boolTextureSnapshot[start.x, start.y]) Debug.LogError("Trying to flood fill from non-solid pixel");
 
@@ -450,10 +443,12 @@ public class DestructibleTerrainTest : MonoBehaviour
         //The stack contains pixels that may have unvisited neighbors
         currentSearch.Push(start);
         visited[start.x, start.y] = true;
+        area = 0;
         while (currentSearch.Count > 0)
         {
             List<Vector2Int> neighbors = NeighborsOfPixel(currentSearch.Peek());
             region.Add(currentSearch.Pop());
+            area++;
 
             foreach (Vector2Int neighbor in neighbors)
             {
