@@ -322,7 +322,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                 lastPosition = curPosition;
                 edge.Add(curPosition);
             }
-            else if (currentDirection != lastDirection && (curPosition - lastPosition).sqrMagnitude > 100)
+            else if (currentDirection != lastDirection && (curPosition - lastPosition).sqrMagnitude > 1) //sqrMagnitude > 100
             {
                 lastPosition = curPosition;
                 edge.Add(curPosition);

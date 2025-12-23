@@ -15,8 +15,11 @@ public class ThrustTowardsMouse : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float distanceFromMouse = Vector2.Distance(transform.position, InputManager.WorldMousePos);
+        Vector2 selfToMouse = InputManager.WorldMousePos - (Vector2)transform.position;
+        float projectedDist = Vector2.Dot(selfToMouse, transform.up);
+        int sign = Math.Sign(projectedDist);
+        float distanceFromMouse = Math.Abs(projectedDist);
         float totalForce = Math.Min(distanceFromMouse * forcePerMeter, maxForce);
-        rb.AddForce(totalForce * transform.up);
+        rb.AddForce(sign * totalForce * transform.up);
     }
 }
