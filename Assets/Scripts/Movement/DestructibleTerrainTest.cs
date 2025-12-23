@@ -10,7 +10,6 @@ using Unity.Profiling;
 
 public class DestructibleTerrainTest : MonoBehaviour
 {
-    // [SerializeField] private PrefabReference selfPrefabRef;
     [SerializeField] private GameObject selfPrefab;
     [SerializeField] private float solidAlphaThreshold;
     [SerializeField] private Sprite solidSpritePrefab;
@@ -21,10 +20,11 @@ public class DestructibleTerrainTest : MonoBehaviour
     [SerializeField] [Tooltip("True if it doesn't move ever")] public bool isOriginalTerrain;
     private Sprite sprite => spriteRenderer.sprite;
     private Texture2D texture => sprite.texture;
+    private DestructibleTerrainManager manager;
 
     // Flood fill maps
     bool[,] visited;
-    private bool[,] solidTextureSnapshot;
+    private bool[,] boolTextureSnapshot;
     
     private void OnValidate()
     {
@@ -42,30 +42,36 @@ public class DestructibleTerrainTest : MonoBehaviour
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
-        solidTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
+        boolTextureSnapshot = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
         visited = new bool[(int)sprite.rect.width, (int)sprite.rect.height];
 
         mainCam = Camera.main;
     }
 
-    private void Update()
+    private void Start()
     {
-        if (InputManager.LmbDown)
-        {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            mousePos = mainCam.ScreenToWorldPoint(mousePos);
-            float radius = 0.2f;
-            UpdateTerrain(mousePos, radius);
-        }
+        manager = DestructibleTerrainManager.Instance;
+        manager.AddTerrain(this);
     }
+
+    // private void Update()
+    // {
+    //     if (InputManager.LmbDown)
+    //     {
+    //         Vector2 mousePos = Mouse.current.position.ReadValue();
+    //         mousePos = mainCam.ScreenToWorldPoint(mousePos);
+    //         float radius = 0.2f;
+    //         UpdateTerrain(mousePos, radius);
+    //     }
+    // }
     
-    public void UpdateTerrain(Vector2 worldCenter, float radius)
+    public void DigSphere(Vector2 worldCenter, float radius)
     {
         //Read entire texture
-        TextureUtils.ReadTextureToBoolArr(sprite, solidTextureSnapshot, solidAlphaThreshold);
+        TextureUtils.ReadTextureToBoolArr(sprite, boolTextureSnapshot, solidAlphaThreshold);
         
         //Dig
-        DeleteSphere(worldCenter, radius, out bool textureChanged);
+        DoDeleteSphere(worldCenter, radius, out bool textureChanged);
         
         if (!textureChanged) return;
         
@@ -75,7 +81,26 @@ public class DestructibleTerrainTest : MonoBehaviour
         UpdatePolyCol();
         
         //Write entire texture
-        TextureUtils.WriteBoolArrToTexture(sprite, solidTextureSnapshot);
+        TextureUtils.WriteBoolArrToTexture(sprite, boolTextureSnapshot);
+    }
+    
+    public void DigCollider(Collider2D destructiveCollider)
+    {
+        //Read entire texture
+        TextureUtils.ReadTextureToBoolArr(sprite, boolTextureSnapshot, solidAlphaThreshold);
+        
+        //Dig
+        DoDeleteInCollider(destructiveCollider, out bool textureChanged);
+        
+        if (!textureChanged) return;
+        
+        SeparateRegions();
+
+        //Assuming this object is one contiguous region, create a new poly collider
+        UpdatePolyCol();
+        
+        //Write entire texture
+        TextureUtils.WriteBoolArrToTexture(sprite, boolTextureSnapshot);
     }
 
     /// <summary>
@@ -90,7 +115,7 @@ public class DestructibleTerrainTest : MonoBehaviour
         if (regions.Count == 0)
         {
             // print($"No solid regions in {gameObject.name}. Destroying");
-            Destroy(gameObject);
+            DestroyAndRemoveFromManager();
         }
 
         foreach (List<Vector2Int> region in regions)
@@ -115,13 +140,13 @@ public class DestructibleTerrainTest : MonoBehaviour
                     sprite.rect,
                     pivotNormalized);
             
-            bool[,] newTexture = new bool[solidTextureSnapshot.GetLength(0), solidTextureSnapshot.GetLength(1)];
+            bool[,] newTexture = new bool[boolTextureSnapshot.GetLength(0), boolTextureSnapshot.GetLength(1)];
             // Only the relevant region is solid
             foreach (Vector2Int pixel in region) 
             {
                 newTexture[pixel.x, pixel.y] = true;
             }
-            newTerrain.solidTextureSnapshot = newTexture;
+            newTerrain.boolTextureSnapshot = newTexture;
             TextureUtils.WriteBoolArrToTexture(newSpriteRenderer.sprite, newTexture);
             
             //Update collider on the new object
@@ -129,6 +154,12 @@ public class DestructibleTerrainTest : MonoBehaviour
         }
         
         //Self destruct
+        DestroyAndRemoveFromManager();
+    }
+
+    private void DestroyAndRemoveFromManager()
+    {
+        manager.RemoveTerrain(this);
         Destroy(gameObject);
     }
 
@@ -150,15 +181,15 @@ public class DestructibleTerrainTest : MonoBehaviour
             for (int y = (int)start.y; y < (int)end.y; y++)
             {
                 if (y < 0 || y >= sprite.rect.height) continue;
-                if (!solidTextureSnapshot[x, y]) continue;
+                if (!boolTextureSnapshot[x, y]) continue;
                 
-                solidTextureSnapshot[x, y] = false;
+                boolTextureSnapshot[x, y] = false;
                 textureEdited = true;
             }
         }
     }
 
-    private void DeleteSphere(Vector2 worldCenter, float radius, out bool textureEdited)
+    private void DoDeleteSphere(Vector2 worldCenter, float radius, out bool textureEdited)
     {
         textureEdited = false;
         
@@ -170,15 +201,35 @@ public class DestructibleTerrainTest : MonoBehaviour
         Vector2Int spriteSpaceCenter = WorldToPixel(worldCenter).RoundToInt();
         float spriteSpaceSquaredRadius = sqrRadius * sprite.pixelsPerUnit * sprite.pixelsPerUnit;
         
-        for (int i = 0; i < solidTextureSnapshot.GetLength(0); i++)
+        for (int i = 0; i < boolTextureSnapshot.GetLength(0); i++)
         {
-            for (int j = 0; j < solidTextureSnapshot.GetLength(1); j++)
+            for (int j = 0; j < boolTextureSnapshot.GetLength(1); j++)
             {
                 float pixelSqrDistance = (new Vector2Int(i,j) - spriteSpaceCenter).sqrMagnitude;
                 if (pixelSqrDistance > spriteSpaceSquaredRadius) continue;
-                if (!solidTextureSnapshot[i, j]) continue;
+                if (!boolTextureSnapshot[i, j]) continue;
                 
-                solidTextureSnapshot[i, j] = false;
+                boolTextureSnapshot[i, j] = false;
+                textureEdited = true;
+            }
+        }
+    }
+    
+    private void DoDeleteInCollider(Collider2D destructiveCollider, out bool textureEdited)
+    {
+        textureEdited = false;
+        
+        //Check collider is in range of the sprite bounds
+        if (!spriteRenderer.bounds.Intersects(destructiveCollider.bounds)) return;
+        
+        for (int i = 0; i < boolTextureSnapshot.GetLength(0); i++)
+        {
+            for (int j = 0; j < boolTextureSnapshot.GetLength(1); j++)
+            {
+                if (!boolTextureSnapshot[i, j]) continue;
+                if (!destructiveCollider.OverlapPoint(PixelToWorld(new Vector2(i, j)))) continue;
+                
+                boolTextureSnapshot[i, j] = false;
                 textureEdited = true;
             }
         }
@@ -351,10 +402,10 @@ public class DestructibleTerrainTest : MonoBehaviour
         bool rightEdge = x == (int)rect.width - 1;
         bool bottomEdge = y == 0;
         bool topEdge = y == (int)rect.height - 1;
-        junctionPixels[0] = (!leftEdge && !bottomEdge) && solidTextureSnapshot[x,y];
-        junctionPixels[1] = (!rightEdge && !bottomEdge) && solidTextureSnapshot[x + 1,y];
-        junctionPixels[2] = (!leftEdge && !topEdge) && solidTextureSnapshot[x,y + 1];
-        junctionPixels[3] = (!rightEdge && !topEdge) && solidTextureSnapshot[x + 1,y + 1];
+        junctionPixels[0] = (!leftEdge && !bottomEdge) && boolTextureSnapshot[x,y];
+        junctionPixels[1] = (!rightEdge && !bottomEdge) && boolTextureSnapshot[x + 1,y];
+        junctionPixels[2] = (!leftEdge && !topEdge) && boolTextureSnapshot[x,y + 1];
+        junctionPixels[3] = (!rightEdge && !topEdge) && boolTextureSnapshot[x + 1,y + 1];
     }
 
     /// <summary>
@@ -376,7 +427,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                 {
                     continue; // Skip visited
                 }
-                if (!solidTextureSnapshot[i,j])      // Skip non-solid pixels
+                if (!boolTextureSnapshot[i,j])      // Skip non-solid pixels
                 {
                     visited[i, j] = true;
                     continue;
@@ -391,7 +442,7 @@ public class DestructibleTerrainTest : MonoBehaviour
     
     private List<Vector2Int> FloodFill(Vector2Int start)
     {
-        if (!solidTextureSnapshot[start.x, start.y]) Debug.LogError("Trying to flood fill from non-solid pixel");
+        if (!boolTextureSnapshot[start.x, start.y]) Debug.LogError("Trying to flood fill from non-solid pixel");
 
         List<Vector2Int> region = new();
         Stack<Vector2Int> currentSearch = new();
@@ -409,7 +460,7 @@ public class DestructibleTerrainTest : MonoBehaviour
                 if (visited[neighbor.x, neighbor.y]) continue;
                 visited[neighbor.x, neighbor.y] = true;
                 
-                if (!solidTextureSnapshot[neighbor.x, neighbor.y]) continue;
+                if (!boolTextureSnapshot[neighbor.x, neighbor.y]) continue;
                 currentSearch.Push(neighbor);
             }
             
