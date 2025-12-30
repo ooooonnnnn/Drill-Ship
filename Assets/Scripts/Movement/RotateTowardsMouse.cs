@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 public class RotateTowardsMouse : MonoBehaviour
 {
     private Vector2 MousePos => MousePosition.mousePos;
-    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] [HideInInspector] private Rigidbody2D rb;
     [SerializeField] private float torque;
 
     private void OnValidate()
