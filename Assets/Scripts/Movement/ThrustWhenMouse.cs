@@ -14,8 +14,8 @@ public class ThrustWhenMouse : MonoBehaviour
 
     private void Awake()
     {
-        InputManager.MouseDown += () => thrusting = true;
-        InputManager.MouseUp += () => thrusting = false;
+        InputManager.LMouseDown += () => thrusting = true;
+        InputManager.LMouseUp += () => thrusting = false;
     }
 
     private void FixedUpdate()

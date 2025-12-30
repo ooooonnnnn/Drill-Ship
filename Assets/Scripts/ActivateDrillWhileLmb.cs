@@ -20,14 +20,14 @@ public class ActivateDrillWhileLmb : MonoBehaviour
 
     private void OnEnable()
     {
-        InputManager.MouseDown += ActivateDrill;
-        InputManager.MouseUp += DeactivateDrill;
+        InputManager.LMouseDown += ActivateDrill;
+        InputManager.LMouseUp += DeactivateDrill;
     }
 
     private void OnDisable()
     {
-        InputManager.MouseDown -= ActivateDrill;
-        InputManager.MouseUp -= DeactivateDrill;
+        InputManager.LMouseDown -= ActivateDrill;
+        InputManager.LMouseUp -= DeactivateDrill;
     }
 
     private void ActivateDrill()
