@@ -1,8 +1,10 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GapplingHook : MonoBehaviour
 {
+    [SerializeField] private float pullRate;
     [SerializeField] [HideInInspector] private DistanceJoint2D joint;
 
     public bool isGrabbing
@@ -20,6 +22,7 @@ public class GapplingHook : MonoBehaviour
     }
     
     private bool _isGrabbing;
+    private bool canPull = true;
     
     private void OnValidate()
     {
@@ -74,6 +77,22 @@ public class GapplingHook : MonoBehaviour
         joint.enabled = false;
         isGrabbing = false;
     }
-    
-    //TODO: disable grabbing of an object once it has been destroyed or mined
+
+    private void FixedUpdate()
+    {
+        if (isGrabbing && Mouse.current.rightButton.isPressed && canPull)
+        {
+            joint.distance -= pullRate * Time.fixedDeltaTime;
+            print("Pulling");
+        }
+
+        canPull = true;
+    }
+
+    private void OnCollisionStay2D(Collision2D other)
+    {
+        if (isGrabbing && other.gameObject == joint.connectedBody.gameObject) canPull = false;
+    }
+
+    //TODO: release object once it has been destroyed or mined
 }

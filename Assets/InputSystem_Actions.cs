@@ -179,7 +179,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""id"": ""3cd632b7-f8c2-4e40-a133-6008f93b67bc"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": ""Hold,Tap"",
+                    ""interactions"": ""Hold,Tap,Press"",
                     ""initialStateCheck"": false
                 }
             ],

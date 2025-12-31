@@ -41,13 +41,15 @@ public class InputManager : MonoBehaviour
                 RMouseHold?.Invoke();
             }
         };
+        actions.Player.Use.started += _ => RmbDown = true;
         actions.Player.Use.canceled += _ =>
         {
             RMouseUp?.Invoke();
+            RmbDown = false;
         };
         actions.Player.Interact.performed += _ => OnInteract?.Invoke();
     }
-    
+
     private void OnDestroy()
     {
         LMouseDown = null;
