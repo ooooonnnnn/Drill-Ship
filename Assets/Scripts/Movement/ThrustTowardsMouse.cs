@@ -6,6 +6,8 @@ public class ThrustTowardsMouse : MonoBehaviour
 {
     [SerializeField] private float forcePerMeter;
     [SerializeField] private float maxForce;
+    [SerializeField] private bool needButtonDown;
+    [SerializeField] private Key button;
     [SerializeField] [HideInInspector] private Rigidbody2D rb;
 
     private void OnValidate()
@@ -15,6 +17,8 @@ public class ThrustTowardsMouse : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (needButtonDown && !Keyboard.current[button].isPressed) return;
+        
         Vector2 selfToMouse = InputManager.WorldMousePos - (Vector2)transform.position;
         float projectedDist = Vector2.Dot(selfToMouse, transform.up);
         int sign = Math.Sign(projectedDist);
