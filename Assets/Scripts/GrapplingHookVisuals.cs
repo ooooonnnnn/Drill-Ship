@@ -32,6 +32,7 @@ public class GrapplingHookVisuals : MonoBehaviour
 
         SetEndPointConstraints(data);
 
+        SetLineShape();
     }
 
     private void SetEndPointConstraints(TransformLocalPoint data)
@@ -53,6 +54,11 @@ public class GrapplingHookVisuals : MonoBehaviour
     }
 
     private void Update()
+    {
+        SetLineShape();
+    }
+
+    private void SetLineShape()
     {
         float maxJointDist = hookScript.JointLength;
         float currentDist = Vector2.Distance(lineRenderer.transform.position, endPointConstraint.transform.position);
