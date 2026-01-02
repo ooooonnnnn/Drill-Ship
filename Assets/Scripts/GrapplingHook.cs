@@ -1,11 +1,13 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-public class GapplingHook : MonoBehaviour
+public class GrapplingHook : MonoBehaviour
 {
     [SerializeField] private float pullRate;
     [SerializeField] [HideInInspector] private DistanceJoint2D joint;
+    [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
 
     public bool isGrabbing
     {
@@ -20,6 +22,8 @@ public class GapplingHook : MonoBehaviour
             _isGrabbing = value;
         }
     }
+    
+    public float JointLength => joint.distance; 
     
     private bool _isGrabbing;
     private bool canPull = true;
@@ -67,8 +71,13 @@ public class GapplingHook : MonoBehaviour
 
         joint.enabled = true;
         joint.connectedBody = overlapCol.attachedRigidbody;
-        joint.connectedAnchor = overlapCol.transform.InverseTransformPoint(worldMousePos);
+        Transform grabbedTransform = overlapCol.transform;
+        Vector2 grabbedLocalPoint = grabbedTransform.InverseTransformPoint(worldMousePos);
+        joint.connectedAnchor = grabbedLocalPoint;
         joint.distance = Vector2.Distance(transform.position, worldMousePos);
+        
+        OnGrabOrRelease.Invoke(new TransformLocalPoint(grabbedTransform, grabbedLocalPoint * grabbedTransform.lossyScale));
+        
         return true;
     }
 
@@ -76,6 +85,8 @@ public class GapplingHook : MonoBehaviour
     {
         joint.enabled = false;
         isGrabbing = false;
+        
+        OnGrabOrRelease.Invoke(null);
     }
 
     private void FixedUpdate()
