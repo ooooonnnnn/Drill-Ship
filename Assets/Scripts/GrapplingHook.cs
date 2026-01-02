@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 public class GrapplingHook : MonoBehaviour
 {
     [SerializeField] private float pullRate;
-    [SerializeField] [HideInInspector] private DistanceJoint2D joint;
+    [SerializeField] [HideInInspector] private BungeeJoint2D joint;
     [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
 
     public bool isGrabbing
@@ -30,7 +30,7 @@ public class GrapplingHook : MonoBehaviour
     
     private void OnValidate()
     {
-        joint = GetComponent<DistanceJoint2D>();
+        joint = GetComponent<BungeeJoint2D>();
     }
 
     private void Awake()
