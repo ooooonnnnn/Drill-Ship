@@ -11,6 +11,7 @@ public class BungeeJoint2D : MonoBehaviour
     public float distance {get => spring.distance; set => spring.distance = value;}
     public Rigidbody2D connectedBody {get => spring.connectedBody; set => spring.connectedBody = value;}
     public Vector2 connectedAnchor {get => spring.connectedAnchor; set => spring.connectedAnchor = value;}
+    public Vector2 anchor {get => spring.anchor; set => spring.anchor = value;}
     
     [SerializeField] [HideInInspector] private SpringJoint2D spring;
     [SerializeField] [HideInInspector] private Rigidbody2D rb;

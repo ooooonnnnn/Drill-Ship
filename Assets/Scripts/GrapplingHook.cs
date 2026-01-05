@@ -6,8 +6,12 @@ using UnityEngine.InputSystem;
 public class GrapplingHook : MonoBehaviour
 {
     [SerializeField] private float pullRate;
-    [SerializeField] [HideInInspector] private BungeeJoint2D joint;
+    [SerializeField] [Tooltip("You can't reel in the hook if the difference between the" +
+                              " spring distance and the actual" +
+                              " distance is greater than this delta")] private float maxPullDelta;
     [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
+    [SerializeField] [HideInInspector] private BungeeJoint2D joint;
+    [SerializeField] [HideInInspector] private Rigidbody2D rb;
 
     public bool isGrabbing
     {
@@ -31,6 +35,7 @@ public class GrapplingHook : MonoBehaviour
     private void OnValidate()
     {
         joint = GetComponent<BungeeJoint2D>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     private void Awake()
@@ -97,12 +102,10 @@ public class GrapplingHook : MonoBehaviour
             print("Pulling");
         }
 
-        canPull = true;
-    }
-
-    private void OnCollisionStay2D(Collision2D other)
-    {
-        if (isGrabbing && other.gameObject == joint.connectedBody.gameObject) canPull = false;
+        float distanceToGrabbed = (transform.TransformPoint(joint.anchor) -
+                                   joint.connectedBody.transform.TransformPoint(joint.connectedAnchor)).magnitude;
+        
+        canPull = distanceToGrabbed - joint.distance <= maxPullDelta;
     }
 
     //TODO: release object once it has been destroyed or mined
