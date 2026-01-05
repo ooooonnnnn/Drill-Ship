@@ -13,10 +13,12 @@ public class BungeeJoint2D : MonoBehaviour
     public Vector2 connectedAnchor {get => spring.connectedAnchor; set => spring.connectedAnchor = value;}
     
     [SerializeField] [HideInInspector] private SpringJoint2D spring;
+    [SerializeField] [HideInInspector] private Rigidbody2D rb;
 
     private void OnValidate()
     {
         spring = GetComponent<SpringJoint2D>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     private void OnDisable()
@@ -33,8 +35,11 @@ public class BungeeJoint2D : MonoBehaviour
     {
         if (!spring.connectedBody) return;
         
-        float currentSquareDist = (transform.TransformPoint(spring.anchor) -
-                                   connectedBody.transform.TransformPoint(spring.connectedAnchor)).sqrMagnitude;
+        Vector2 selfToConnected = connectedBody.transform.TransformPoint(spring.connectedAnchor) -
+                                    transform.TransformPoint(spring.anchor);
+        
+        //Turn the spring on if it should be stretched 
+        float currentSquareDist = selfToConnected.sqrMagnitude;
         float requiredSquareDist = distance * distance;
         spring.enabled = currentSquareDist > requiredSquareDist;
     }
