@@ -19,7 +19,7 @@ public class RotateTowardsMouse : MonoBehaviour
 
     void FixedUpdate()
     {
-        float angleSelfToMouse = Vector2.SignedAngle(transform.up, MousePos - (Vector2)transform.position);
+        float angleSelfToMouse = Vector2.SignedAngle(transform.right, MousePos - (Vector2)transform.position);
         rb.AddTorque(torque * angleSelfToMouse);
     }
 }

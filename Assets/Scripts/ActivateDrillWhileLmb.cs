@@ -7,10 +7,6 @@ public class ActivateDrillWhileLmb : MonoBehaviour
     [SerializeField] private Color activeColor, inactiveColor;
     [SerializeField] [HideInInspector] private CircleCollider2D trigger;
     [SerializeField] [HideInInspector] private SpriteRenderer spriteRenderer;
-    // [SerializeField] [HideInInspector] private CircleCollider2D trigger;
-    // [SerializeField] [HideInInspector] private CircleCollider2D trigger;
-    // [SerializeField] [HideInInspector] private CircleCollider2D trigger;
-    // [SerializeField] [HideInInspector] private CircleCollider2D trigger;
 
     private void OnValidate()
     {
