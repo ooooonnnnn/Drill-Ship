@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using Helper;
+using UnityEngine.Animations;
 
 public class GrapplingHook : MonoBehaviour
 {
@@ -30,6 +31,10 @@ public class GrapplingHook : MonoBehaviour
     /// </summary>
     [SerializeField, HideInInspector] private Timer launchTimer;
     [SerializeField, HideInInspector] private TriggerEnterEvent hookTriggerEvent;
+    /// <summary>
+    /// To orient to hook before launching
+    /// </summary>
+    [SerializeField, HideInInspector] private RotationConstraint hookRotationConstraint;
     /// <summary>
     /// The joint keeping the hook projectile stored on the ship
     /// </summary>
@@ -64,6 +69,7 @@ public class GrapplingHook : MonoBehaviour
         //returningJoint.connectedBody = hookProjectile;
         hookTriggerEvent = hookProjectile.GetComponent<TriggerEnterEvent>();
         launchTimer = hookProjectile.GetComponent<Timer>();
+        hookRotationConstraint = hookProjectile.GetComponent<RotationConstraint>();
     }
 
     private void Awake()
@@ -126,6 +132,7 @@ public class GrapplingHook : MonoBehaviour
     private void LaunchHook()
     {
         storingJoint.enabled = false;
+        hookRotationConstraint.constraintActive = false;
         rb.AddForceEqualReaction(hookProjectile, transform.right * launchForce, ForceMode2D.Impulse);
         launchTimer.StartTimer(launchTimeout, ReturnHook);
         
@@ -143,10 +150,10 @@ public class GrapplingHook : MonoBehaviour
     private void TryStoreHook(Collider2D other)
     {
         print("Trying to store hook");
-        
         if (!other.CompareTag(PlayerTag)) return;
         
         storingJoint.enabled = true;
+        hookRotationConstraint.constraintActive = true;
         //returningJoint.enabled = false;
         
         hookState = HookState.Stored;
