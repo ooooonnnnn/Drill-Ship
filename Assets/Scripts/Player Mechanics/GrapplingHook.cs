@@ -25,19 +25,22 @@ public class GrapplingHook : MonoBehaviour
     [SerializeField] private BungeeJoint2D grappleJoint;
     //[SerializeField, Tooltip("For returning the hook when it's aborting grab")] private Joint2D returningJoint;
     
+    [Header("Projectile")]
     [SerializeField] private Rigidbody2D hookProjectile;
     /// <summary>
     /// Used to track the flying time of the projectile 
     /// </summary>
-    [SerializeField, HideInInspector] private Timer launchTimer;
+    [SerializeField, HideInInspector] private Timer hookFlyTimer;
     [SerializeField, HideInInspector] private TriggerEnterEvent hookTriggerEvent;
     /// <summary>
     /// To orient to hook before launching
     /// </summary>
     [SerializeField, HideInInspector] private RotationConstraint hookRotationConstraint;
     /// <summary>
-    /// The joint keeping the hook projectile stored on the ship
+    /// The joint on the hook used to anchor it to the grabbed object
     /// </summary>
+    [SerializeField, HideInInspector] private AnchoredJoint2D hookGrappleJoint;
+    
     [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
     [SerializeField] [HideInInspector] private Rigidbody2D rb;
 
@@ -60,7 +63,8 @@ public class GrapplingHook : MonoBehaviour
     private bool canPull = true;
     
     private const string PlayerTag = "Player";
-    
+    private const string NotGrabbableTag = "GrappleHook Not Grabbable";
+
     private void OnValidate()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -68,8 +72,9 @@ public class GrapplingHook : MonoBehaviour
         storingJoint.connectedBody = hookProjectile;
         //returningJoint.connectedBody = hookProjectile;
         hookTriggerEvent = hookProjectile.GetComponent<TriggerEnterEvent>();
-        launchTimer = hookProjectile.GetComponent<Timer>();
+        hookFlyTimer = hookProjectile.GetComponent<Timer>();
         hookRotationConstraint = hookProjectile.GetComponent<RotationConstraint>();
+        hookGrappleJoint = hookProjectile.GetComponent<AnchoredJoint2D>();
     }
 
     private void Awake()
@@ -134,7 +139,7 @@ public class GrapplingHook : MonoBehaviour
         Vector2 desiredVelocity = transform.right * launchSpeed;
         Vector2 suggestedForce = hookProjectile.SuggestForceForVelocity(desiredVelocity);
         rb.AddForceEqualReaction(hookProjectile, suggestedForce, ForceMode2D.Impulse);
-        launchTimer.StartTimer(launchTimeout, ReturnHook);
+        hookFlyTimer.StartTimer(launchTimeout, ReturnHook);
         
         hookState = HookState.Launched;
     }
@@ -154,14 +159,25 @@ public class GrapplingHook : MonoBehaviour
         
         storingJoint.enabled = true;
         hookRotationConstraint.constraintActive = true;
-        //returningJoint.enabled = false;
         
         hookState = HookState.Stored;
     }
     
     private void TryGrab(Collider2D other)
     {
-
+        if (other.CompareTag(NotGrabbableTag) || other.CompareTag(PlayerTag)) return;
+        
+        hookFlyTimer.StopTimer();
+        
+        hookGrappleJoint.connectedBody = other.attachedRigidbody;
+        grappleJoint.connectedBody = other.attachedRigidbody;
+        Vector2 localPointOnOther = other.transform.InverseTransformPoint(hookProjectile.position);
+        hookGrappleJoint.connectedAnchor = localPointOnOther;
+        grappleJoint.connectedAnchor = localPointOnOther;
+        hookGrappleJoint.enabled = true;
+        grappleJoint.enabled = true;
+        grappleJoint.distance = Vector2.Distance(transform.position, hookProjectile.position);
+        
         hookState = HookState.Grabbing;
     }
     
