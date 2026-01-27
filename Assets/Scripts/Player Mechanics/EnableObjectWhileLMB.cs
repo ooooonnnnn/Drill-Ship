@@ -13,14 +13,14 @@ public class EnableObjectWhileLMB : MonoBehaviour
 
     private void OnEnable()
     {
-        InputManager.LMouseDown += Activate;
-        InputManager.LMouseUp += Deactivate;
+        InputManager.OnLmbDown += Activate;
+        InputManager.OnLmbUp += Deactivate;
     }
 
     private void OnDisable()
     {
-        InputManager.LMouseDown -= Activate;
-        InputManager.LMouseUp -= Deactivate;
+        InputManager.OnLmbDown -= Activate;
+        InputManager.OnLmbUp -= Deactivate;
     }
 
     private void Activate()

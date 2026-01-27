@@ -6,15 +6,15 @@ using UnityEngine.InputSystem.Interactions;
 public class InputManager : MonoBehaviour
 {
     private InputSystem_Actions actions;
-    public static event Action LMouseUp;
-    public static event Action RMouseUp;
-    public static event Action LMouseDown;
-    public static event Action RMouseDown;
-    public static event Action RMouseTap;
-    public static event Action RMouseHold;
+    public static event Action OnLmbUp;
+    public static event Action OnRmbUp;
+    public static event Action OnLmbDown;
+    public static event Action OnRmbDown;
+    public static event Action OnRmbTap;
+    public static event Action OnRmbHold;
     public static event Action OnInteract;
-    public static bool LmbDown { get; private set;}
-    public static bool RmbDown { get; private set;}
+    public static bool IsLmbDown { get; private set;}
+    public static bool IsRmbDown { get; private set;}
     public static Vector2 WorldMousePos => Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
     
     
@@ -23,46 +23,46 @@ public class InputManager : MonoBehaviour
         actions = new InputSystem_Actions();
         actions.Player.Attack.performed += (_) =>
         {
-            LMouseDown?.Invoke();
-            LmbDown = true;
+            OnLmbDown?.Invoke();
+            IsLmbDown = true;
         };
         actions.Player.Attack.canceled += (_) =>
         {
-            LMouseUp?.Invoke();
-            LmbDown = false;
+            OnLmbUp?.Invoke();
+            IsLmbDown = false;
         };
         actions.Player.Use.performed += context =>
         {
             if (context.interaction is TapInteraction)
             {
-                RMouseTap?.Invoke();
+                OnRmbTap?.Invoke();
             }
             else if (context.interaction is HoldInteraction)
             {
-                RMouseHold?.Invoke();
+                OnRmbHold?.Invoke();
             }
         };
         actions.Player.Use.started += _ =>
         {
-            RMouseDown?.Invoke();
-            RmbDown = true;
+            OnRmbDown?.Invoke();
+            IsRmbDown = true;
         };
         actions.Player.Use.canceled += _ =>
         {
-            RMouseUp?.Invoke();
-            RmbDown = false;
+            OnRmbUp?.Invoke();
+            IsRmbDown = false;
         };
         actions.Player.Interact.performed += _ => OnInteract?.Invoke();
     }
 
     private void OnDestroy()
     {
-        LMouseDown = null;
-        LMouseUp = null;
-        RMouseTap = null;
-        RMouseHold = null;
-        RMouseUp = null;
-        RMouseDown = null;
+        OnLmbDown = null;
+        OnLmbUp = null;
+        OnRmbTap = null;
+        OnRmbHold = null;
+        OnRmbUp = null;
+        OnRmbDown = null;
         OnInteract = null;
     }
 

@@ -7,7 +7,7 @@ using UnityEngine.Animations;
 public class GrapplingHook : MonoBehaviour
 {
     [Header("Launching")] 
-    [SerializeField] private float launchForce;
+    [SerializeField] private float launchSpeed;
     [SerializeField,
      Tooltip("How long can the projectile fly before aborting and returning")] private float launchTimeout;
     
@@ -88,8 +88,7 @@ public class GrapplingHook : MonoBehaviour
         switch (oldState)
         {
             case HookState.Stored:
-                InputManager.RMouseTap -= LaunchHook;
-                InputManager.RMouseHold -= LaunchHook;
+                InputManager.OnRmbDown -= LaunchHook;
                 break;
             case HookState.Launched:
                 hookTriggerEvent.OnTriggerEnter -= TryGrab;
@@ -98,11 +97,11 @@ public class GrapplingHook : MonoBehaviour
                 hookTriggerEvent.OnTriggerEnter -= TryStoreHook;
                 break;
             case HookState.Grabbing:
-                InputManager.RMouseTap -= ReleaseGrab;
-                InputManager.RMouseDown -= StartReeling;
+                InputManager.OnRmbTap -= ReleaseGrab;
+                InputManager.OnRmbDown -= StartReeling;
                 break;
             case HookState.Reeling:
-                InputManager.RMouseUp -= StopReeling;
+                InputManager.OnRmbUp -= StopReeling;
                 break;
         }
         
@@ -110,8 +109,7 @@ public class GrapplingHook : MonoBehaviour
         switch (newState)
         {
             case HookState.Stored:
-                InputManager.RMouseTap += LaunchHook;
-                InputManager.RMouseHold += LaunchHook;
+                InputManager.OnRmbDown += LaunchHook;
                 break;
             case HookState.Launched:
                 hookTriggerEvent.OnTriggerEnter += TryGrab;
@@ -120,11 +118,11 @@ public class GrapplingHook : MonoBehaviour
                 hookTriggerEvent.OnTriggerEnter += TryStoreHook;
                 break;
             case HookState.Grabbing:
-                InputManager.RMouseTap += ReleaseGrab;
-                InputManager.RMouseDown += StartReeling;
+                InputManager.OnRmbTap += ReleaseGrab;
+                InputManager.OnRmbDown += StartReeling;
                 break;
             case HookState.Reeling:
-                InputManager.RMouseUp += StopReeling;
+                InputManager.OnRmbUp += StopReeling;
                 break;
         }
     }
@@ -133,7 +131,9 @@ public class GrapplingHook : MonoBehaviour
     {
         storingJoint.enabled = false;
         hookRotationConstraint.constraintActive = false;
-        rb.AddForceEqualReaction(hookProjectile, transform.right * launchForce, ForceMode2D.Impulse);
+        Vector2 desiredVelocity = transform.right * launchSpeed;
+        Vector2 suggestedForce = hookProjectile.SuggestForceForVelocity(desiredVelocity);
+        rb.AddForceEqualReaction(hookProjectile, suggestedForce, ForceMode2D.Impulse);
         launchTimer.StartTimer(launchTimeout, ReturnHook);
         
         hookState = HookState.Launched;
