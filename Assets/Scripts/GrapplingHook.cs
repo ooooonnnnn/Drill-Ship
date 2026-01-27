@@ -10,6 +10,7 @@ public class GrapplingHook : MonoBehaviour
                               " spring distance and the actual" +
                               " distance is greater than this delta")] private float maxPullDelta;
     [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
+    [SerializeField] private Rigidbody2D hookProjectile;
     [SerializeField] [HideInInspector] private BungeeJoint2D joint;
     [SerializeField] [HideInInspector] private Rigidbody2D rb;
 
@@ -41,6 +42,7 @@ public class GrapplingHook : MonoBehaviour
     private void Awake()
     {
         SetCallbacks_NotGrabbing();
+        hookProjectile.simulated = false;
     }
 
     /// <summary>
@@ -63,6 +65,11 @@ public class GrapplingHook : MonoBehaviour
         InputManager.RMouseTap += ReleaseGrab;
     }
 
+    private void LaunchHook()
+    {
+        
+    }
+    
     private void Grab() 
     {
         isGrabbing = TryGrab();
@@ -109,4 +116,14 @@ public class GrapplingHook : MonoBehaviour
     }
 
     //TODO: release object once it has been destroyed or mined
+
+    private enum HookState
+    {
+        Stored,
+        Launched,
+        Grabbing,
+        Reeling,
+        ReturningNoCollision,
+        Returning
+    }
 }
