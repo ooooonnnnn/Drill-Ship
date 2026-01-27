@@ -9,6 +9,7 @@ public class InputManager : MonoBehaviour
     public static event Action LMouseUp;
     public static event Action RMouseUp;
     public static event Action LMouseDown;
+    public static event Action RMouseDown;
     public static event Action RMouseTap;
     public static event Action RMouseHold;
     public static event Action OnInteract;
@@ -41,7 +42,11 @@ public class InputManager : MonoBehaviour
                 RMouseHold?.Invoke();
             }
         };
-        actions.Player.Use.started += _ => RmbDown = true;
+        actions.Player.Use.started += _ =>
+        {
+            RMouseDown?.Invoke();
+            RmbDown = true;
+        };
         actions.Player.Use.canceled += _ =>
         {
             RMouseUp?.Invoke();
@@ -57,6 +62,7 @@ public class InputManager : MonoBehaviour
         RMouseTap = null;
         RMouseHold = null;
         RMouseUp = null;
+        RMouseDown = null;
         OnInteract = null;
     }
 

@@ -8,40 +8,40 @@ using UnityEngine;
 [RequireComponent(typeof(SpringJoint2D), typeof(Rigidbody2D))]
 public class BungeeJoint2D : MonoBehaviour
 {
-    public float distance {get => spring.distance; set => spring.distance = value;}
-    public Rigidbody2D connectedBody {get => spring.connectedBody; set => spring.connectedBody = value;}
-    public Vector2 connectedAnchor {get => spring.connectedAnchor; set => spring.connectedAnchor = value;}
-    public Vector2 anchor {get => spring.anchor; set => spring.anchor = value;}
+    public float distance {get => springJoint.distance; set => springJoint.distance = value;}
+    public Rigidbody2D connectedBody {get => springJoint.connectedBody; set => springJoint.connectedBody = value;}
+    public Vector2 connectedAnchor {get => springJoint.connectedAnchor; set => springJoint.connectedAnchor = value;}
+    public Vector2 anchor {get => springJoint.anchor; set => springJoint.anchor = value;}
     
-    [SerializeField] [HideInInspector] private SpringJoint2D spring;
+    [SerializeField] private SpringJoint2D springJoint;
     [SerializeField] [HideInInspector] private Rigidbody2D rb;
 
     private void OnValidate()
     {
-        spring = GetComponent<SpringJoint2D>();
+        //spring = GetComponent<SpringJoint2D>();
         rb = GetComponent<Rigidbody2D>();
     }
 
     private void OnDisable()
     {
-        spring.enabled = false;
+        springJoint.enabled = false;
     }
     
     private void OnEnable()
     {
-        spring.enabled = true;
+        springJoint.enabled = true;
     }
 
     private void FixedUpdate()
     {
-        if (!spring.connectedBody) return;
+        if (!springJoint.connectedBody) return;
         
-        Vector2 selfToConnected = connectedBody.transform.TransformPoint(spring.connectedAnchor) -
-                                    transform.TransformPoint(spring.anchor);
+        Vector2 selfToConnected = connectedBody.transform.TransformPoint(springJoint.connectedAnchor) -
+                                    transform.TransformPoint(springJoint.anchor);
         
         //Turn the spring on if it should be stretched 
         float currentSquareDist = selfToConnected.sqrMagnitude;
         float requiredSquareDist = distance * distance;
-        spring.enabled = currentSquareDist > requiredSquareDist;
+        springJoint.enabled = currentSquareDist > requiredSquareDist;
     }
 }

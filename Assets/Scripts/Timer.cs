@@ -29,6 +29,7 @@ public class Timer : MonoBehaviour
         if (Time.time >= endTime)
         {
             onTimerEnd?.Invoke();
+            enabled = false;
         }
     }
 
