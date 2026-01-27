@@ -7,12 +7,16 @@ public class GrapplingHook : MonoBehaviour
 {
     [Header("Launching")] 
     [SerializeField] private float launchForce;
+    [SerializeField,
+     Tooltip("How long can the projectile fly before aborting and returning")] private float launchTimeout;
+    
     [Header("Reeling In")]
     [SerializeField] private float pullRate;
     [SerializeField] [Tooltip("You can't reel in the hook if the difference between the" +
                               " spring distance and the actual" +
                               " distance is greater than this delta")] private float maxPullDelta;
     [SerializeField] private Rigidbody2D hookProjectile;
+    [SerializeField, HideInInspector] private TriggerEnterEvent hookTriggerEvent;
     /// <summary>
     /// The joint keeping the hook projectile stored on the ship
     /// </summary>
@@ -23,23 +27,25 @@ public class GrapplingHook : MonoBehaviour
     
     private HookState hookState = HookState.Stored;
 
-    public bool isGrabbing
-    {
-        get => _isGrabbing;
-        set
-        {
-            if (_isGrabbing != value)
-            {
-                if (!value) SetCallbacks_NotGrabbing();
-                else SetCallbacks_Grabbing();
-            }
-            _isGrabbing = value;
-        }
-    }
+    public bool IsGrabbing => hookState == HookState.Grabbing;
+    
+    // public bool isGrabbing
+    // {
+    //     get => _isGrabbing;
+    //     set
+    //     {
+    //         if (_isGrabbing != value)
+    //         {
+    //             if (!value) SetCallbacks_NotGrabbing();
+    //             else SetCallbacks_Grabbing();
+    //         }
+    //         _isGrabbing = value;
+    //     }
+    // }
     
     public float JointLength => joint.distance; 
     
-    private bool _isGrabbing;
+    // private bool _isGrabbing;
     private bool canPull = true;
     
     private void OnValidate()
@@ -47,6 +53,7 @@ public class GrapplingHook : MonoBehaviour
         joint = GetComponent<BungeeJoint2D>();
         rb = GetComponent<Rigidbody2D>();
         storingJoint = GetComponent<FixedJoint2D>();
+        hookTriggerEvent = hookProjectile.GetComponent<TriggerEnterEvent>();
     }
 
     private void Awake()
@@ -55,35 +62,45 @@ public class GrapplingHook : MonoBehaviour
         InputManager.RMouseTap += LaunchHook;
     }
 
-    /// <summary>
-    /// Callbacks while not grabbing anything
-    /// </summary>
-    private void SetCallbacks_NotGrabbing()
-    {
-        InputManager.RMouseTap += Grab;
-        InputManager.RMouseHold += Grab;
-        InputManager.RMouseTap -= ReleaseGrab;
-    }
 
     /// <summary>
-    /// Callbacks while grabbing something
+    /// Remove event subscriptions of the old state and set them for the new state
     /// </summary>
-    private void SetCallbacks_Grabbing()
+    /// <param name="oldState">Optional, the previous state</param>
+    /// <param name="newState">The new state</param>
+    private void SetCallbackForState(HookState newState, HookState oldState = HookState.None)
     {
-        InputManager.RMouseTap -= Grab;
-        InputManager.RMouseHold -= Grab;
-        InputManager.RMouseTap += ReleaseGrab;
+        // Remove callbacks for the old state
+        switch (oldState)
+        {
+            case HookState.Stored:
+                InputManager.RMouseTap -= LaunchHook;
+                InputManager.RMouseHold -= LaunchHook;
+                break;
+        }
+        
+        // Set callbacks for the new state
+        switch (newState)
+        {
+            case HookState.Stored:
+                InputManager.RMouseTap += LaunchHook;
+                InputManager.RMouseHold += LaunchHook;
+                break;
+            case HookState.Launched:
+                hookTriggerEvent.OnTriggerEnter += Grab;
+                break;
+        }
     }
 
     private void LaunchHook()
     {
-        Destroy(storingJoint);
+        storingJoint.enabled = false;
         rb.AddForceEqualReaction(hookProjectile, transform.right * launchForce, ForceMode2D.Impulse);
     }
     
-    private void Grab() 
+    private void Grab(Collider2D other) 
     {
-        isGrabbing = TryGrab();
+        //IsGrabbing = TryGrab();
     }
 
     private bool TryGrab()
@@ -107,14 +124,14 @@ public class GrapplingHook : MonoBehaviour
     private void ReleaseGrab()
     {
         joint.enabled = false;
-        isGrabbing = false;
+        //IsGrabbing = false;
         
         OnGrabOrRelease.Invoke(null);
     }
 
     private void FixedUpdate()
     {
-        if (isGrabbing && Mouse.current.rightButton.isPressed && canPull)
+        if (IsGrabbing && Mouse.current.rightButton.isPressed && canPull)
         {
             joint.distance -= pullRate * Time.fixedDeltaTime;
             print("Pulling");
@@ -130,6 +147,7 @@ public class GrapplingHook : MonoBehaviour
 
     private enum HookState
     {
+        None,
         Stored,
         Launched,
         Grabbing,
