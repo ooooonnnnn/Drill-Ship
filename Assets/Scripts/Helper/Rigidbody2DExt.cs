@@ -5,7 +5,7 @@ namespace Helper
     public static class Rigidbody2DExt
     {
         /// <summary>
-        /// Makes two rigidbodies interact with a force. Each of them gets the same force in opposite dircetions
+        /// Add a force to the other rigidbody and an opposite force to this rigidbody.
         /// </summary>
         /// <param name="rb"></param>
         /// <param name="other"></param>

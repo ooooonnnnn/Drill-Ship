@@ -1,18 +1,27 @@
-using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using Helper;
 
 public class GrapplingHook : MonoBehaviour
 {
+    [Header("Launching")] 
+    [SerializeField] private float launchForce;
+    [Header("Reeling In")]
     [SerializeField] private float pullRate;
     [SerializeField] [Tooltip("You can't reel in the hook if the difference between the" +
                               " spring distance and the actual" +
                               " distance is greater than this delta")] private float maxPullDelta;
-    [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
     [SerializeField] private Rigidbody2D hookProjectile;
+    /// <summary>
+    /// The joint keeping the hook projectile stored on the ship
+    /// </summary>
+    [SerializeField, HideInInspector] private FixedJoint2D storingJoint;
+    [SerializeField] private UnityEvent<TransformLocalPoint> OnGrabOrRelease;
     [SerializeField] [HideInInspector] private BungeeJoint2D joint;
     [SerializeField] [HideInInspector] private Rigidbody2D rb;
+    
+    private HookState hookState = HookState.Stored;
 
     public bool isGrabbing
     {
@@ -37,12 +46,13 @@ public class GrapplingHook : MonoBehaviour
     {
         joint = GetComponent<BungeeJoint2D>();
         rb = GetComponent<Rigidbody2D>();
+        storingJoint = GetComponent<FixedJoint2D>();
     }
 
     private void Awake()
     {
-        SetCallbacks_NotGrabbing();
-        hookProjectile.simulated = false;
+        //SetCallbacks_NotGrabbing();
+        InputManager.RMouseTap += LaunchHook;
     }
 
     /// <summary>
@@ -67,7 +77,8 @@ public class GrapplingHook : MonoBehaviour
 
     private void LaunchHook()
     {
-        
+        Destroy(storingJoint);
+        rb.AddForceEqualReaction(hookProjectile, transform.right * launchForce, ForceMode2D.Impulse);
     }
     
     private void Grab() 
@@ -123,7 +134,6 @@ public class GrapplingHook : MonoBehaviour
         Launched,
         Grabbing,
         Reeling,
-        ReturningNoCollision,
-        Returning
+        ReturningNoCollision
     }
 }
