@@ -16,5 +16,17 @@ namespace Helper
             other.AddForce(force, mode);
             rb.AddForce(-force, mode);
         }
+
+        /// <summary>
+        /// Gives the Impulse force required to reach a desired velocity.
+        /// </summary>
+        /// <param name="rb"></param>
+        /// <param name="desiredVelocity"></param>
+        /// <returns></returns>
+        public static Vector2 SuggestForceForVelocity(this Rigidbody2D rb, Vector2 desiredVelocity)
+        {
+            Vector2 velocityDelta = desiredVelocity - rb.linearVelocity;
+            return velocityDelta * rb.mass;
+        }
     }
 }

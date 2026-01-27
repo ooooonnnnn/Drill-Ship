@@ -15,11 +15,14 @@ public class GrapplingHook : MonoBehaviour
     [SerializeField] [Tooltip("You can't reel in the hook if the difference between the" +
                               " spring distance and the actual" +
                               " distance is greater than this delta")] private float maxPullDelta;
+
+    [Header("Returning Empty Handed")]
+    [SerializeField] private float returnSpeed;
     
     [Header("Joints")]
     [SerializeField] private Joint2D storingJoint;
     [SerializeField] private BungeeJoint2D grappleJoint;
-    [SerializeField, Tooltip("For returning the hook when it's aborting grab")] private Joint2D returningJoint;
+    //[SerializeField, Tooltip("For returning the hook when it's aborting grab")] private Joint2D returningJoint;
     
     [SerializeField] private Rigidbody2D hookProjectile;
     /// <summary>
@@ -58,7 +61,7 @@ public class GrapplingHook : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         grappleJoint.connectedBody = hookProjectile;
         storingJoint.connectedBody = hookProjectile;
-        returningJoint.connectedBody = hookProjectile;
+        //returningJoint.connectedBody = hookProjectile;
         hookTriggerEvent = hookProjectile.GetComponent<TriggerEnterEvent>();
         launchTimer = hookProjectile.GetComponent<Timer>();
     }
@@ -132,7 +135,7 @@ public class GrapplingHook : MonoBehaviour
     private void ReturnHook()
     {
         print("Returning hook");
-        returningJoint.enabled = true;
+        //returningJoint.enabled = true;
         
         hookState = HookState.ReturningNoCollision;
     }
@@ -144,7 +147,7 @@ public class GrapplingHook : MonoBehaviour
         if (!other.CompareTag(PlayerTag)) return;
         
         storingJoint.enabled = true;
-        returningJoint.enabled = false;
+        //returningJoint.enabled = false;
         
         hookState = HookState.Stored;
     }
@@ -194,7 +197,6 @@ public class GrapplingHook : MonoBehaviour
     }
 
     
-
     private void FixedUpdate()
     {
         if (IsGrabbing && Mouse.current.rightButton.isPressed && canPull)
@@ -207,6 +209,19 @@ public class GrapplingHook : MonoBehaviour
                                    grappleJoint.connectedBody.transform.TransformPoint(grappleJoint.connectedAnchor)).magnitude;
         
         canPull = distanceToGrabbed - grappleJoint.distance <= maxPullDelta;
+        
+        if (hookState == HookState.ReturningNoCollision) ApplyReturningForce();
+    }
+
+    /// <summary>
+    /// Applies a force from this to the hook projectile to give it velocity towards this 
+    /// </summary>
+    private void ApplyReturningForce()
+    {
+        Vector2 hookToMeDir = (transform.position - hookProjectile.transform.position).normalized;
+        Vector2 desiredVelocity = hookToMeDir * returnSpeed;
+        rb.AddForceEqualReaction(hookProjectile, hookProjectile.SuggestForceForVelocity(desiredVelocity),
+            ForceMode2D.Impulse);
     }
 
     //TODO: release object once it has been destroyed or mined
