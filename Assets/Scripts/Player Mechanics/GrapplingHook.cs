@@ -17,7 +17,7 @@ public class GrapplingHook : MonoBehaviour
                               " distance is greater than this delta")] private float maxPullDelta;
     
     [Header("Joints")]
-    [SerializeField] private FixedJoint2D storingJoint;
+    [SerializeField] private Joint2D storingJoint;
     [SerializeField] private BungeeJoint2D grappleJoint;
     [SerializeField, Tooltip("For returning the hook when it's aborting grab")] private Joint2D returningJoint;
     
