@@ -98,6 +98,7 @@ public class GrapplingHook : MonoBehaviour
                 break;
             case HookState.Launched:
                 hookColliderEvents.OnCollisionEnter -= TryGrab;
+                InputManager.OnRmbTap -= ReturnHook;
                 break;
             case HookState.ReturningNoCollision:
                 hookColliderEvents.OnTriggerEnter -= TryStoreHook;
@@ -119,6 +120,7 @@ public class GrapplingHook : MonoBehaviour
                 break;
             case HookState.Launched:
                 hookColliderEvents.OnCollisionEnter += TryGrab;
+                InputManager.OnRmbTap += ReturnHook;
                 break;
             case HookState.ReturningNoCollision:
                 hookColliderEvents.OnTriggerEnter += TryStoreHook;
@@ -147,6 +149,7 @@ public class GrapplingHook : MonoBehaviour
 
     private void ReturnHook()
     {
+        hookFlyTimer.StopTimer();
         hookState = HookState.ReturningNoCollision;
     }
 
