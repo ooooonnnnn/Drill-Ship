@@ -120,7 +120,10 @@ NavMeshSettings:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 --- !u!28 &16782765
 Texture2D:
   m_ObjectHideFlags: 0
@@ -1442,7 +1445,11 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       objectReference: {fileID: 497967029}
+=======
+      objectReference: {fileID: 925556746}
+>>>>>>> Stashed changes
 =======
       objectReference: {fileID: 925556746}
 >>>>>>> Stashed changes
@@ -3391,6 +3398,7 @@ AimConstraint:
   - sourceTransform: {fileID: 899979156}
     weight: 1
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 --- !u!28 &1777421914
 Texture2D:
   m_ObjectHideFlags: 0
@@ -3437,6 +3445,8 @@ Texture2D:
     offset: 0
     size: 0
     path: 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 --- !u!1 &1791405469
