@@ -1,17 +1,27 @@
 using System;
-using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Animations;
 
-public class GrapplingHookVisuals : MonoBehaviour
+public class GrappleHookRopeVisuals : MonoBehaviour
 {
-    [SerializeField] private LineRenderer lineRenderer;
-    [SerializeField] private ParentConstraint endPointConstraint;
-    [SerializeField] private GrapplingHook hookScript;
+    [Header("Objects")]
+    [SerializeField] private GrappleHook hookScript;
+    [SerializeField,
+     Tooltip("Line renderer component that sits on the starting point")] private LineRenderer lineRenderer;
+    [SerializeField] private Transform endPoint;
+    
+    [Header("Rope Shape Settings")]
+    [SerializeField, Tooltip("The amplitude of the rope undulations is capped")] private float maxAmplitude;
+    [SerializeField, 
+     Tooltip("When the distance between the start and end points gets below this, the amplitude will stop increasing at maxAmplitude")] 
+    private float minDistance;
+    [SerializeField, 
+     Tooltip("When launching, the rope will be longer than the distance between the start and end points")] private float ropeSlackWhenLaunching;
+    
+    [Header("Line Resolution")]
     [SerializeField] private int numPoints;
-    [SerializeField] private float maxAmplitude;
-    [SerializeField] private float minDist;
+
+    private RopeState ropeState = RopeState.Inactive;
 
     private void OnValidate()
     {
@@ -20,61 +30,80 @@ public class GrapplingHookVisuals : MonoBehaviour
         lineRenderer.enabled = false;
     }
 
-    public void OnGrabStateChange(TransformLocalPoint data)
+    public void OnHookStateChange(HookState prevState, HookState newState)
     {
-        if (data == null)
+        if (newState == HookState.Stored)
         {
+            ropeState = RopeState.Inactive;
             lineRenderer.enabled = false;
             return;
         }
-        lineRenderer.enabled = true;
-
-
-        SetEndPointConstraints(data);
-
-        SetLineShape();
-    }
-
-    private void SetEndPointConstraints(TransformLocalPoint data)
-    {
-        endPointConstraint.constraintActive = false;
-        endPointConstraint.locked = false;
-        var constraintSources = new List<ConstraintSource>
+        if(prevState == HookState.Stored)
         {
-            new ConstraintSource
-            {
-                sourceTransform = data.transform,
-                weight = 1
-            }
+            lineRenderer.enabled = true;
+        }
+
+        ropeState = newState switch
+        {
+            HookState.Launched => RopeState.Slacking,
+            _ => RopeState.Tight
         };
-        endPointConstraint.SetSources(constraintSources);
-        endPointConstraint.SetTranslationOffset(0, data.point);
-        endPointConstraint.locked = true;
-        endPointConstraint.constraintActive = true;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        SetLineShape();
+        float targetRopeLength = 0,
+            ropeTightLength = 0;
+        switch (ropeState)
+        {
+            case RopeState.Inactive:
+                return;
+            case RopeState.Slacking:
+                ropeTightLength = Vector2.Distance(lineRenderer.transform.position, endPoint.position);
+                targetRopeLength = ropeTightLength + ropeSlackWhenLaunching;
+                break;
+            case RopeState.Tight:
+                ropeTightLength = Vector2.Distance(lineRenderer.transform.position, endPoint.position);
+                targetRopeLength = hookScript.JointLength;
+                break;
+        }
+        SetLineShape(targetRopeLength, ropeTightLength);
     }
 
-    private void SetLineShape()
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetRopeLength">Desired rope length</param>
+    /// <param name="ropeTightLength">The length the rope would have had if it was tight</param>
+    private void SetLineShape(float targetRopeLength, float ropeTightLength)
     {
-        float maxJointDist = hookScript.JointLength;
-        float currentDist = Vector2.Distance(lineRenderer.transform.position, endPointConstraint.transform.position);
-
-        Func<int, float> lineShape = currentDist >= maxJointDist ?
+        Func<int, float> lineShape = targetRopeLength >= ropeTightLength ?
             _ => 0 :
-            currentDist >= minDist ?
-                ind => math.sin(2 * math.PI * ind / (numPoints - 1)) * math.lerp(maxAmplitude, 0, math.pow((currentDist - minDist) / (maxJointDist - minDist), 4)) :
+            targetRopeLength >= minDistance ?
+                //Sine with variable amplitude: zero when the lengths are the same, increasing when currentDist decreases, 
+                //limited by maxAmplitude when the distance reaches minDistance
+                ind => math.sin(2 * math.PI * ind / (numPoints - 1)) * math.lerp(maxAmplitude, 0, math.pow((targetRopeLength - minDistance) / (ropeTightLength - minDistance), 4)) :
                 ind => math.sin(2 * math.PI * ind / (numPoints - 1)) * maxAmplitude;
 
         Vector3[] positions = new Vector3[numPoints];
         for (int i = 0; i < numPoints; i++)
         {
-            positions[i] = new Vector3(currentDist * i / (numPoints - 1), lineShape(i));
+            positions[i] = new Vector3(targetRopeLength * i / (numPoints - 1), lineShape(i));
         }
         
         lineRenderer.SetPositions(positions);
+    }
+
+    private enum RopeState
+    {
+        Inactive,
+        /// <summary>
+        /// The rope is longer than the length of the physical joint
+        /// </summary>
+        Slacking,
+        /// <summary>
+        /// The rope and the physical joint are the same length
+        /// </summary>
+        Tight
     }
 }
