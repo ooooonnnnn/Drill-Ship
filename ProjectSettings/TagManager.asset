@@ -9,10 +9,10 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ignore Grappling Hook
   - Water
   - UI
-  - 
+  - Grappling Hook
   - 
   - 
   - 

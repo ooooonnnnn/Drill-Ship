@@ -31,7 +31,7 @@ public class GrapplingHook : MonoBehaviour
     /// Used to track the flying time of the projectile 
     /// </summary>
     [SerializeField, HideInInspector] private Timer hookFlyTimer;
-    [SerializeField, HideInInspector] private TriggerEnterEvent hookTriggerEvent;
+    [SerializeField, HideInInspector] private ColliderEvents hookColliderEvents;
     /// <summary>
     /// To orient to hook before launching
     /// </summary>
@@ -72,7 +72,7 @@ public class GrapplingHook : MonoBehaviour
         grappleJoint.connectedBody = hookProjectile;
         storingJoint.connectedBody = hookProjectile;
         //returningJoint.connectedBody = hookProjectile;
-        hookTriggerEvent = hookProjectile.GetComponent<TriggerEnterEvent>();
+        hookColliderEvents = hookProjectile.GetComponent<ColliderEvents>();
         hookFlyTimer = hookProjectile.GetComponent<Timer>();
         hookRotationConstraint = hookProjectile.GetComponent<RotationConstraint>();
         hookGrappleJoint = hookProjectile.GetComponent<AnchoredJoint2D>();
@@ -94,13 +94,13 @@ public class GrapplingHook : MonoBehaviour
         switch (oldState)
         {
             case HookState.Stored:
-                InputManager.OnRmbDown -= LaunchHook;
+                InputManager.OnRmbTap -= LaunchHook;
                 break;
             case HookState.Launched:
-                hookTriggerEvent.OnTriggerEnter -= TryGrab;
+                hookColliderEvents.OnCollisionEnter -= TryGrab;
                 break;
             case HookState.ReturningNoCollision:
-                hookTriggerEvent.OnTriggerEnter -= TryStoreHook;
+                hookColliderEvents.OnTriggerEnter -= TryStoreHook;
                 break;
             case HookState.Grabbing:
                 InputManager.OnRmbTap -= ReleaseGrab;
@@ -115,13 +115,13 @@ public class GrapplingHook : MonoBehaviour
         switch (newState)
         {
             case HookState.Stored:
-                InputManager.OnRmbDown += LaunchHook;
+                InputManager.OnRmbTap += LaunchHook;
                 break;
             case HookState.Launched:
-                hookTriggerEvent.OnTriggerEnter += TryGrab;
+                hookColliderEvents.OnCollisionEnter += TryGrab;
                 break;
             case HookState.ReturningNoCollision:
-                hookTriggerEvent.OnTriggerEnter += TryStoreHook;
+                hookColliderEvents.OnTriggerEnter += TryStoreHook;
                 break;
             case HookState.Grabbing:
                 InputManager.OnRmbTap += ReleaseGrab;
@@ -160,8 +160,10 @@ public class GrapplingHook : MonoBehaviour
         hookState = HookState.Stored;
     }
     
-    private void TryGrab(Collider2D other)
+    private void TryGrab(Collision2D collision)
     {
+        Collider2D other = collision.collider;
+        
         if (other.CompareTag(NotGrabbableTag) || other.CompareTag(PlayerTag)) return;
         
         hookFlyTimer.StopTimer();
