@@ -49,6 +49,7 @@ public class GrapplingHook : MonoBehaviour
         get => _hookState;
         set
         {
+            print($"Hook State: {value}");
             SetCallbackForState(value, _hookState);
             _hookState = value;
         }
@@ -103,7 +104,7 @@ public class GrapplingHook : MonoBehaviour
                 break;
             case HookState.Grabbing:
                 InputManager.OnRmbTap -= ReleaseGrab;
-                InputManager.OnRmbDown -= StartReeling;
+                InputManager.OnRmbHold -= StartReeling;
                 break;
             case HookState.Reeling:
                 InputManager.OnRmbUp -= StopReeling;
@@ -124,7 +125,7 @@ public class GrapplingHook : MonoBehaviour
                 break;
             case HookState.Grabbing:
                 InputManager.OnRmbTap += ReleaseGrab;
-                InputManager.OnRmbDown += StartReeling;
+                InputManager.OnRmbHold += StartReeling;
                 break;
             case HookState.Reeling:
                 InputManager.OnRmbUp += StopReeling;
@@ -146,15 +147,11 @@ public class GrapplingHook : MonoBehaviour
 
     private void ReturnHook()
     {
-        print("Returning hook");
-        //returningJoint.enabled = true;
-        
         hookState = HookState.ReturningNoCollision;
     }
 
     private void TryStoreHook(Collider2D other)
     {
-        print("Trying to store hook");
         if (!other.CompareTag(PlayerTag)) return;
         
         storingJoint.enabled = true;
@@ -184,56 +181,44 @@ public class GrapplingHook : MonoBehaviour
     private void ReleaseGrab()
     {
         grappleJoint.enabled = false;
-        //IsGrabbing = false;
-        
-        OnGrabOrRelease.Invoke(null);
+        hookGrappleJoint.enabled = false;
+
+        ReturnHook();
     }
 
     private void StartReeling()
     {
-        
         hookState = HookState.Reeling;
     }
     
     private void StopReeling()
     {
-        
         hookState = HookState.Grabbing;
     }
-
-    private bool Grab()
-    {
-        Vector2 worldMousePos = InputManager.WorldMousePos;
-        Collider2D overlapCol = Physics2D.OverlapPoint(worldMousePos);
-        if (!overlapCol) return false;
-
-        grappleJoint.enabled = true;
-        grappleJoint.connectedBody = overlapCol.attachedRigidbody;
-        Transform grabbedTransform = overlapCol.transform;
-        Vector2 grabbedLocalPoint = grabbedTransform.InverseTransformPoint(worldMousePos);
-        grappleJoint.connectedAnchor = grabbedLocalPoint;
-        grappleJoint.distance = Vector2.Distance(transform.position, worldMousePos);
-        
-        OnGrabOrRelease.Invoke(new TransformLocalPoint(grabbedTransform, grabbedLocalPoint * grabbedTransform.lossyScale));
-        
-        return true;
-    }
-
     
     private void FixedUpdate()
     {
-        if (IsGrabbing && Mouse.current.rightButton.isPressed && canPull)
+        switch (hookState)
         {
-            grappleJoint.distance -= pullRate * Time.fixedDeltaTime;
-            print("Pulling");
+            case HookState.ReturningNoCollision:
+                ApplyReturningForce();
+                break;
+            case HookState.Reeling:
+                TryReel();
+                break;
         }
+    }
 
+    /// <summary>
+    /// Reels the hook in if it's not reeled beyond the allowable delta
+    /// </summary>
+    private void TryReel()
+    {
         float distanceToGrabbed = (transform.TransformPoint(grappleJoint.anchor) -
                                    grappleJoint.connectedBody.transform.TransformPoint(grappleJoint.connectedAnchor)).magnitude;
-        
         canPull = distanceToGrabbed - grappleJoint.distance <= maxPullDelta;
-        
-        if (hookState == HookState.ReturningNoCollision) ApplyReturningForce();
+        if (!canPull) return;
+        grappleJoint.distance -= pullRate * Time.fixedDeltaTime;
     }
 
     /// <summary>

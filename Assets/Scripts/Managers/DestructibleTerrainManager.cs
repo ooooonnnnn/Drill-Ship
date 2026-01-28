@@ -15,7 +15,7 @@ public class DestructibleTerrainManager : MonoBehaviour
     public void AddTerrain(DestructibleTerrainTest terrain)
     {
         int instanceID = terrain.gameObject.GetInstanceID();
-        print($"Adding terrain with ID {instanceID}");
+        // print($"Adding terrain with ID {instanceID}");
         terrainsByID.Add(instanceID, terrain);
     }
 

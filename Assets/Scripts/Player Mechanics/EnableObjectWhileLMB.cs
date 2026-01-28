@@ -7,7 +7,7 @@ public class EnableObjectWhileLMB : MonoBehaviour
     
     private void OnValidate()
     {
-        print($"affecting {objectToEnable.name} enabled state");
+        Debug.LogWarning($"affecting {objectToEnable.name} enabled state");
         objectToEnable.SetActive(defaultState);
     }
 
