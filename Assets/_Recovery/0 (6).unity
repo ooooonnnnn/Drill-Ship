@@ -416,7 +416,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 569023643}
         m_TargetAssemblyTypeName: GrapplingHookVisuals, Assembly-CSharp
-        m_MethodName: OnGrabStateChange
+        m_MethodName: OnHookStateChange
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

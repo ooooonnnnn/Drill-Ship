@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 using Helper;
 using UnityEngine.Animations;
 
-public class GrapplingHook : MonoBehaviour
+public class GrappleHook : MonoBehaviour
 {
     [Header("Launching")] 
     [SerializeField] private float launchSpeed;
@@ -56,8 +56,6 @@ public class GrapplingHook : MonoBehaviour
     }
     private HookState _hookState = HookState.None;
 
-    public bool IsGrabbing => hookState == HookState.Grabbing;
-    
     public float JointLength => grappleJoint.distance; 
     
     // private bool _isGrabbing;
