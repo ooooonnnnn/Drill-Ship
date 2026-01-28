@@ -74,21 +74,22 @@ public class GrappleHookRopeVisuals : MonoBehaviour
     /// 
     /// </summary>
     /// <param name="targetRopeLength">Desired rope length</param>
-    /// <param name="ropeTightLength">The length the rope would have had if it was tight</param>
-    private void SetLineShape(float targetRopeLength, float ropeTightLength)
+    /// <param name="start2EndDistance"></param>
+    private void SetLineShape(float targetRopeLength, float start2EndDistance)
     {
-        Func<int, float> lineShape = targetRopeLength >= ropeTightLength ?
+        Func<int, float> lineShape = start2EndDistance >= targetRopeLength ?
             _ => 0 :
-            targetRopeLength >= minDistance ?
+            start2EndDistance >= minDistance ?
                 //Sine with variable amplitude: zero when the lengths are the same, increasing when currentDist decreases, 
                 //limited by maxAmplitude when the distance reaches minDistance
-                ind => math.sin(2 * math.PI * ind / (numPoints - 1)) * math.lerp(maxAmplitude, 0, math.pow((targetRopeLength - minDistance) / (ropeTightLength - minDistance), 4)) :
+                ind => math.sin(2 * math.PI * ind / (numPoints - 1)) *
+                       math.lerp(maxAmplitude, 0, math.pow((start2EndDistance - minDistance) / (targetRopeLength - minDistance), 4)) :
                 ind => math.sin(2 * math.PI * ind / (numPoints - 1)) * maxAmplitude;
 
         Vector3[] positions = new Vector3[numPoints];
         for (int i = 0; i < numPoints; i++)
         {
-            positions[i] = new Vector3(targetRopeLength * i / (numPoints - 1), lineShape(i));
+            positions[i] = new Vector3(start2EndDistance * i / (numPoints - 1), lineShape(i));
         }
         
         lineRenderer.SetPositions(positions);
