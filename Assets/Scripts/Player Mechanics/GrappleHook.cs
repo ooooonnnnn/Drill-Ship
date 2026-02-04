@@ -96,11 +96,11 @@ public class GrappleHook : MonoBehaviour
                 InputManager.OnRmbTap -= LaunchHook;
                 break;
             case HookState.Launched:
-                hookColliderEvents.OnCollisionEnter -= TryGrab;
+                hookColliderEvents.OnCollisionEnter.RemoveListener(TryGrab);
                 InputManager.OnRmbTap -= ReturnHook;
                 break;
             case HookState.ReturningNoCollision:
-                hookColliderEvents.OnTriggerEnter -= TryStoreHook;
+                hookColliderEvents.OnTriggerEnter.RemoveListener(TryStoreHook);
                 break;
             case HookState.Grabbing:
                 InputManager.OnRmbTap -= ReleaseGrab;
@@ -118,11 +118,11 @@ public class GrappleHook : MonoBehaviour
                 InputManager.OnRmbTap += LaunchHook;
                 break;
             case HookState.Launched:
-                hookColliderEvents.OnCollisionEnter += TryGrab;
+                hookColliderEvents.OnCollisionEnter.AddListener(TryGrab);
                 InputManager.OnRmbTap += ReturnHook;
                 break;
             case HookState.ReturningNoCollision:
-                hookColliderEvents.OnTriggerEnter += TryStoreHook;
+                hookColliderEvents.OnTriggerEnter.AddListener(TryStoreHook);
                 break;
             case HookState.Grabbing:
                 InputManager.OnRmbTap += ReleaseGrab;

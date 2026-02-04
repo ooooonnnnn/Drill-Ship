@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - GrappleHook Not Grabbable
+  - Knockback On Hit
   layers:
   - Default
   - TransparentFX
