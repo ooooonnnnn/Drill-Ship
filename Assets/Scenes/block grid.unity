@@ -2190,6 +2190,7 @@ MonoBehaviour:
         m_CallState: 2
   colliderEvents: {fileID: 325864231}
   cooldown: 0.1
+  playerTransform: {fileID: 325864215}
 --- !u!1 &1484176318
 GameObject:
   m_ObjectHideFlags: 0
