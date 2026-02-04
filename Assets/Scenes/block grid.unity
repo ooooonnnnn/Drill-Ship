@@ -6843,6 +6843,7 @@ MonoBehaviour:
   colliderEvents: {fileID: 325864231}
   cooldown: 0.1
   playerTransform: {fileID: 325864215}
+  diggingCollider: {fileID: 325864223}
 --- !u!4 &1460679007 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1416146204733641366, guid: 2b0b461c6fb7e8342af288b0f2c99a76, type: 3}
