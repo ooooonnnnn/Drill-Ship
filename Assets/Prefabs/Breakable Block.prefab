@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3933244063374966608}
   - component: {fileID: 5054981950903120701}
   - component: {fileID: 5952854967779665265}
+  - component: {fileID: 7927707155868257098}
   m_Layer: 0
   m_Name: Breakable Block
   m_TagString: Diggable
@@ -155,3 +156,30 @@ MonoBehaviour:
   fullHealthColor: {r: 1, g: 1, b: 1, a: 1}
   oneHealthColor: {r: 0, g: 0, b: 0, a: 1}
   spriteRenderer: {fileID: 3933244063374966608}
+--- !u!50 &7927707155868257098
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3750138576530654934}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
