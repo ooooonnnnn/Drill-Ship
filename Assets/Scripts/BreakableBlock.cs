@@ -1,16 +1,38 @@
+using System;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 public class BreakableBlock : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private int health;
+    private int currentHealth;
+    [SerializeField] private Color fullHealthColor, oneHealthColor;
+    [SerializeField, HideInInspector] private SpriteRenderer spriteRenderer;
+
+    private void OnValidate()
     {
-        
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer.color = fullHealthColor;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
+        currentHealth = health;
+    }
+
+    public void TakeDamage()
+    {
+        currentHealth--;
+
+        if (currentHealth <= 0)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Color healthColor = Color.Lerp(fullHealthColor, oneHealthColor,
+            1f / (health - 1) + 1 - (float)currentHealth / (health - 1));
         
+        spriteRenderer.color = healthColor;
     }
 }

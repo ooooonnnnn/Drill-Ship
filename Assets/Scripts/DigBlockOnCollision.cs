@@ -27,7 +27,7 @@ public class DigBlockOnCollision : MonoBehaviour
         
         if (!collision.gameObject.CompareTag("Diggable")) return;
         
-        print("Digging");
+        BreakableBlockManager.Instance.GetBreakableBlockComponent(collision.gameObject).TakeDamage();
         OnDig.Invoke();
     }
 }
