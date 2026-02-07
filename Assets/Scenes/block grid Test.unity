@@ -10347,7 +10347,7 @@ SpringJoint2D:
   m_Anchor: {x: 0, y: 0}
   m_ConnectedAnchor: {x: 0, y: 0}
   m_AutoConfigureDistance: 1
-  m_Distance: 5.9521427
+  m_Distance: 0.005
   m_DampingRatio: 0
   m_Frequency: 4
 --- !u!114 &325864225
@@ -10467,7 +10467,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77b255395e1c8ec45b9ba6d56830df20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KnockbackOnDigBlock
-  knockbackForce: 3
+  knockbackForce: 2
   rb: {fileID: 325864213}
 --- !u!1 &326537275
 GameObject:
@@ -46059,7 +46059,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 1
-  m_Sprite: {fileID: 21300000, guid: e593dcc8209b4a748ab0f0305e771b42, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0fc5bbd306eee7847a32d87bebc4c3e3, type: 3}
   m_Color: {r: 1, g: 0.033799596, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -64061,7 +64061,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: e593dcc8209b4a748ab0f0305e771b42, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0fc5bbd306eee7847a32d87bebc4c3e3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
