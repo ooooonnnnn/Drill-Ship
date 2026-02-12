@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BreakableBlock : MonoBehaviour
 {
+    [SerializeField] private ResourceType resourceType;
     [SerializeField] private int health;
     private int currentHealth;
     [SerializeField] private Color fullHealthColor, oneHealthColor;
@@ -26,6 +27,7 @@ public class BreakableBlock : MonoBehaviour
 
         if (currentHealth <= 0)
         {
+            Inventory.Instance.AddItem(resourceType);
             Destroy(gameObject);
             return;
         }
