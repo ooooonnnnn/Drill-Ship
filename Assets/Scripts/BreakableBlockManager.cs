@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class BreakableBlockManager : MonoBehaviour
 {
@@ -14,7 +15,7 @@ public class BreakableBlockManager : MonoBehaviour
     [SerializeField] private int gridWidth, gridHeight;
     [SerializeField] private float blockSize;
     public static BreakableBlockManager Instance { get; private set; }
-    private Dictionary<GameObject, BreakableBlock> breakableBlockComponents = new ();
+    [SerializeField] private SerializedDictionary<GameObject, BreakableBlock> breakableBlockComponents = new ();
 
     private void OnValidate()
     {
@@ -34,6 +35,8 @@ public class BreakableBlockManager : MonoBehaviour
     {
         return breakableBlockComponents[go];
     }
+
+#if UNITY_EDITOR
 
     public void GenerateBlocks()
     {
@@ -70,6 +73,8 @@ public class BreakableBlockManager : MonoBehaviour
             }
         }
     }
+    
+#endif
 
     private void NormalizeBlockSpawnChances()
     {

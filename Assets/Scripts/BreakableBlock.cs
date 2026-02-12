@@ -1,5 +1,3 @@
-using System;
-using UnityEditor.Rendering;
 using UnityEngine;
 
 public class BreakableBlock : MonoBehaviour
