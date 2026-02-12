@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class BreakableBlock : MonoBehaviour
 {
-    [SerializeField] private ResourceType resourceType;
-    [SerializeField] private int health;
+    public ResourceType resourceType;
+    public int health;
     private int currentHealth;
-    [SerializeField] private Color fullHealthColor, oneHealthColor;
+    public Color fullHealthColor, oneHealthColor;
     [SerializeField, HideInInspector] private SpriteRenderer spriteRenderer;
 
-    private void OnValidate()
+    public void OnValidate()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.color = fullHealthColor;
