@@ -12,8 +12,10 @@ public class Fuel : MonoBehaviour
         get => _currentFuel;
         set
         {
-            _currentFuel = value;
+            if (value == _currentFuel) return;
+            
             OnFuelChange.Invoke(value, maxFuel);
+            _currentFuel = value;
         }
     }
     private float _currentFuel;
@@ -26,5 +28,6 @@ public class Fuel : MonoBehaviour
     public void ConsumeFuel(float amount)
     {
         currentFuel -= amount;
+        currentFuel = currentFuel < 0 ? 0 : currentFuel;
     }
 }
