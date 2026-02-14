@@ -19,10 +19,15 @@ public class BreakableBlockManager : MonoBehaviour
 
     private void OnValidate()
     {
+        if (breakableBlockComponents == null)
+            breakableBlockComponents = new();
+
+        breakableBlockComponents.Clear();
+        
         BreakableBlock[] components = FindObjectsByType<BreakableBlock>(FindObjectsSortMode.None);
         foreach (BreakableBlock component in components)
         {
-            breakableBlockComponents.Add(component.gameObject, component);
+            breakableBlockComponents[component.gameObject] = component;
         }
     }
 
