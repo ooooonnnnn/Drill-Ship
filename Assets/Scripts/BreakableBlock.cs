@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class BreakableBlock : MonoBehaviour
@@ -34,5 +35,10 @@ public class BreakableBlock : MonoBehaviour
             1f / (health - 1) + 1 - (float)currentHealth / (health - 1));
         
         spriteRenderer.color = healthColor;
+    }
+
+    private void OnDestroy()
+    {
+        BreakableBlockManager.Instance.LogBlockDestroyed(transform.position);
     }
 }

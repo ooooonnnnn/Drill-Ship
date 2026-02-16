@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Rendering;
 
 public class BreakableBlockManager : MonoBehaviour
@@ -13,12 +14,15 @@ public class BreakableBlockManager : MonoBehaviour
     
     [Header("Grid")]
     [SerializeField] private int gridWidth, gridHeight;
-    [SerializeField] private float blockSize;
+    public float blockSize => _blockSize;
+    [SerializeField] private float _blockSize;
     public static BreakableBlockManager Instance { get; private set; }
     [SerializeField] private SerializedDictionary<GameObject, BreakableBlock> breakableBlockComponents = new ();
+    [Tooltip("Passed with the position of the block")] public UnityEvent<Vector2> OnBlockDestroyed;
 
     private void OnValidate()
     {
+        breakableBlockComponents = new();
         BreakableBlock[] components = FindObjectsByType<BreakableBlock>(FindObjectsSortMode.None);
         foreach (BreakableBlock component in components)
         {
@@ -36,7 +40,12 @@ public class BreakableBlockManager : MonoBehaviour
         return breakableBlockComponents[go];
     }
 
-#if UNITY_EDITOR
+    public void LogBlockDestroyed(Vector2 position)
+    {
+        OnBlockDestroyed.Invoke(position);
+    }
+
+    #if UNITY_EDITOR
 
     public void GenerateBlocks()
     {
@@ -74,7 +83,7 @@ public class BreakableBlockManager : MonoBehaviour
         }
     }
     
-#endif
+
 
     private void NormalizeBlockSpawnChances()
     {
@@ -104,4 +113,6 @@ public class BreakableBlockManager : MonoBehaviour
 
         return chosenSettings;
     }
+    
+    #endif
 }
