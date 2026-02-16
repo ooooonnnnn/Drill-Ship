@@ -6,7 +6,7 @@ public class FogOfWarMaskCreator : MonoBehaviour
     [SerializeField, Tooltip("When digging a block, masks will be created in a radius around where it was")]
     private int radius;
     [SerializeField] private GameObject maskPrefab;
-    [SerializeField] private float blockSize;
+    private float blockSize;
 
     private void Start()
     {
