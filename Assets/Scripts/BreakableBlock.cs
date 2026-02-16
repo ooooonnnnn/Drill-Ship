@@ -27,6 +27,7 @@ public class BreakableBlock : MonoBehaviour
         if (currentHealth <= 0)
         {
             Inventory.Instance.AddItem(resourceType);
+            BreakableBlockManager.Instance.LogBlockDestroyed(transform.position);
             Destroy(gameObject);
             return;
         }
@@ -35,10 +36,5 @@ public class BreakableBlock : MonoBehaviour
             1f / (health - 1) + 1 - (float)currentHealth / (health - 1));
         
         spriteRenderer.color = healthColor;
-    }
-
-    private void OnDestroy()
-    {
-        BreakableBlockManager.Instance.LogBlockDestroyed(transform.position);
     }
 }

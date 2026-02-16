@@ -11,6 +11,7 @@ public class FogOfWarMaskCreator : MonoBehaviour
     private void Start()
     {
         blockSize = BreakableBlockManager.Instance.blockSize;
+        transform.Translate(0, -blockSize * radius, 0);
     }
     
     /// <summary>
