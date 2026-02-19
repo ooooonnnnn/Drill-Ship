@@ -60,11 +60,7 @@ public class InputManager : MonoBehaviour
             IsRmbDown = false;
         };
         actions.Player.Interact.performed += _ => OnInteract.Invoke();
-        actions.Player.Move.performed += context =>
-        {
-            OnMove.Invoke(context.ReadValue<Vector2>());
-            print(context.ReadValue<Vector2>());
-        };
+        actions.Player.Move.performed += context => OnMove.Invoke(context.ReadValue<Vector2>());
     }
 
     private void OnEnable()
