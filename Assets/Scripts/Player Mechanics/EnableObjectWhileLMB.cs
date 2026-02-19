@@ -13,14 +13,14 @@ public class EnableObjectWhileLMB : MonoBehaviour
 
     private void OnEnable()
     {
-        InputManager.OnLmbDown += Activate;
-        InputManager.OnLmbUp += Deactivate;
+        InputManager.Instance.OnLmbDown.AddListener(Activate);
+        InputManager.Instance.OnLmbUp.AddListener(Deactivate);
     }
 
     private void OnDisable()
     {
-        InputManager.OnLmbDown -= Activate;
-        InputManager.OnLmbUp -= Deactivate;
+        InputManager.Instance.OnLmbDown.RemoveListener(Activate);
+        InputManager.Instance.OnLmbUp.RemoveListener(Deactivate);
     }
 
     private void Activate()

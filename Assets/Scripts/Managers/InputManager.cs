@@ -1,69 +1,70 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 
 public class InputManager : MonoBehaviour
 {
+    public static InputManager Instance { get; private set; }
+    
     private InputSystem_Actions actions;
-    public static event Action OnLmbUp;
-    public static event Action OnRmbUp;
-    public static event Action OnLmbDown;
-    public static event Action OnRmbDown;
-    public static event Action OnRmbTap;
-    public static event Action OnRmbHold;
-    public static event Action OnInteract;
+    public UnityEvent OnLmbUp;
+    public UnityEvent OnRmbUp;
+    public UnityEvent OnLmbDown;
+    public UnityEvent OnRmbDown;
+    public UnityEvent OnRmbTap;
+    public UnityEvent OnRmbHold;
+    public UnityEvent OnInteract;
+    public UnityEvent<Vector2> OnMove;
     public static bool IsLmbDown { get; private set;}
     public static bool IsRmbDown { get; private set;}
+    //TODO: Remove this
     public static Vector2 WorldMousePos => Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
     
     
     private void Awake()
     {
+        Instance = this;
+        
         actions = new InputSystem_Actions();
         actions.Player.Attack.performed += (_) =>
         {
-            OnLmbDown?.Invoke();
+            OnLmbDown.Invoke();
             IsLmbDown = true;
         };
         actions.Player.Attack.canceled += (_) =>
         {
-            OnLmbUp?.Invoke();
+            OnLmbUp.Invoke();
             IsLmbDown = false;
         };
         actions.Player.Use.performed += context =>
         {
             if (context.interaction is TapInteraction)
             {
-                OnRmbTap?.Invoke();
+                OnRmbTap.Invoke();
             }
             else if (context.interaction is HoldInteraction)
             {
-                OnRmbHold?.Invoke();
+                OnRmbHold.Invoke();
             }
         };
         actions.Player.Use.started += _ =>
         {
-            OnRmbDown?.Invoke();
+            OnRmbDown.Invoke();
             IsRmbDown = true;
         };
         actions.Player.Use.canceled += _ =>
         {
-            OnRmbUp?.Invoke();
+            OnRmbUp.Invoke();
             IsRmbDown = false;
         };
-        actions.Player.Interact.performed += _ => OnInteract?.Invoke();
-    }
-
-    private void OnDestroy()
-    {
-        OnLmbDown = null;
-        OnLmbUp = null;
-        OnRmbTap = null;
-        OnRmbHold = null;
-        OnRmbUp = null;
-        OnRmbDown = null;
-        OnInteract = null;
+        actions.Player.Interact.performed += _ => OnInteract.Invoke();
+        actions.Player.Move.performed += context =>
+        {
+            OnMove.Invoke(context.ReadValue<Vector2>());
+            print(context.ReadValue<Vector2>());
+        };
     }
 
     private void OnEnable()

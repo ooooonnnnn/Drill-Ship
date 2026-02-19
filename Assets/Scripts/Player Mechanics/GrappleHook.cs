@@ -77,7 +77,7 @@ public class GrappleHook : MonoBehaviour
         hookGrappleJoint = hookProjectile.GetComponent<AnchoredJoint2D>();
     }
 
-    private void Awake()
+    private void Start()
     {
         hookState = HookState.Stored;
     }
@@ -89,25 +89,27 @@ public class GrappleHook : MonoBehaviour
     /// <param name="newState">The new state</param>
     private void SetCallbackForState(HookState newState, HookState oldState = HookState.None)
     {
+        InputManager inputManager = InputManager.Instance;
+        
         // Remove callbacks for the old state
         switch (oldState)
         {
             case HookState.Stored:
-                InputManager.OnRmbTap -= LaunchHook;
+                inputManager.OnRmbTap.RemoveListener(LaunchHook);
                 break;
             case HookState.Launched:
                 hookColliderEvents.OnCollisionEnter.RemoveListener(TryGrab);
-                InputManager.OnRmbTap -= ReturnHook;
+                inputManager.OnRmbTap.RemoveListener(ReturnHook);
                 break;
             case HookState.ReturningNoCollision:
                 hookColliderEvents.OnTriggerEnter.RemoveListener(TryStoreHook);
                 break;
             case HookState.Grabbing:
-                InputManager.OnRmbTap -= ReleaseGrab;
-                InputManager.OnRmbHold -= StartReeling;
+                inputManager.OnRmbTap.RemoveListener(ReleaseGrab);
+                inputManager.OnRmbHold.RemoveListener(StartReeling);
                 break;
             case HookState.Reeling:
-                InputManager.OnRmbUp -= StopReeling;
+                inputManager.OnRmbUp.RemoveListener(StopReeling);
                 break;
         }
         
@@ -115,21 +117,21 @@ public class GrappleHook : MonoBehaviour
         switch (newState)
         {
             case HookState.Stored:
-                InputManager.OnRmbTap += LaunchHook;
+                inputManager.OnRmbTap.AddListener(LaunchHook);
                 break;
             case HookState.Launched:
                 hookColliderEvents.OnCollisionEnter.AddListener(TryGrab);
-                InputManager.OnRmbTap += ReturnHook;
+                inputManager.OnRmbTap.AddListener(ReturnHook);
                 break;
             case HookState.ReturningNoCollision:
                 hookColliderEvents.OnTriggerEnter.AddListener(TryStoreHook);
                 break;
             case HookState.Grabbing:
-                InputManager.OnRmbTap += ReleaseGrab;
-                InputManager.OnRmbHold += StartReeling;
+                inputManager.OnRmbTap.AddListener(ReleaseGrab);
+                inputManager.OnRmbHold.AddListener(StartReeling);
                 break;
             case HookState.Reeling:
-                InputManager.OnRmbUp += StopReeling;
+                inputManager.OnRmbUp.AddListener(StopReeling);
                 break;
         }
     }

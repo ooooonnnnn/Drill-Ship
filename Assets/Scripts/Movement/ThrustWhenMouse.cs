@@ -12,10 +12,11 @@ public class ThrustWhenMouse : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
+    //TODO: set in inspector
     private void Awake()
     {
-        InputManager.OnLmbDown += () => thrusting = true;
-        InputManager.OnLmbUp += () => thrusting = false;
+        // InputManager.OnLmbDown += () => thrusting = true;
+        // InputManager.OnLmbUp += () => thrusting = false;
     }
 
     private void FixedUpdate()
