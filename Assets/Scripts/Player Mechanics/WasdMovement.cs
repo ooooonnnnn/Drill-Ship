@@ -10,6 +10,7 @@ public class WasdMovement : MonoBehaviour
     [SerializeField] private float deceleration;
     
     [SerializeField, HideInInspector] private Rigidbody2D rb;
+    [SerializeField] private bool isGrounded;
 
     private Vector2 targetVelocity;
 
@@ -33,4 +34,6 @@ public class WasdMovement : MonoBehaviour
         float velChange = Math.Min(velChangeNeeded, maxVelChange);
         rb.linearVelocity += new Vector2((velChange * deltaVelocity.normalized).x, 0);
     }
+    
+    public void SetGrounded(bool groundedState) => isGrounded = groundedState;
 }
