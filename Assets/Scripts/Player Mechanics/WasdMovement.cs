@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Vector2 = UnityEngine.Vector2;
@@ -32,22 +33,27 @@ public class WasdMovement : MonoBehaviour
 
     private void ValidateJumpCurve()
     {
-        Keyframe[] keys = jumpCurve.keys;
+        Keyframe[] keys = jumpCurve.keys.Length == 3 ? jumpCurve.keys : new Keyframe[3];
+
         keys[0].time = 0;
         keys[0].value = 0;
-        keys[^1].time = 1;
-        keys[^1].value = 0;
+        keys[1].time = 0.5f;
+        keys[1].value = 1;
+        keys[2].time = 1;
+        keys[2].value = 0;
+
+        keys[1].outWeight = keys[1].inWeight;
+        keys[1].inTangent = 0;
+        keys[1].outTangent = 0;
         
-        float maxValue = keys.Max(key => key.value);
-        for (int i = 1; i < keys.Length - 1; i++)
-        {
-            keys[i].value /= maxValue;
-            keys[i].inTangent /= maxValue;
-            keys[i].outTangent /= maxValue;
-            keys[i].time = Math.Clamp(keys[i].time, 0f, 1f);
-        }
+        keys[2].inTangent = -keys[0].outTangent;
+        keys[2].inWeight = keys[0].outWeight;
         
         jumpCurve.SetKeys(keys);
+        
+        AnimationUtility.SetKeyBroken(jumpCurve, 0, true);
+        AnimationUtility.SetKeyBroken(jumpCurve, 1, false);
+        AnimationUtility.SetKeyBroken(jumpCurve, 2, true);
     }
     
     public void HandleMovementInput(Vector2 input)
