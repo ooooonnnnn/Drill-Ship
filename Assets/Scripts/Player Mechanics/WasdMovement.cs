@@ -5,18 +5,24 @@ using Vector2 = UnityEngine.Vector2;
 [RequireComponent(typeof(Rigidbody2D))]
 public class WasdMovement : MonoBehaviour
 {
+    [Header("Walk")]
     [SerializeField] private float speed;
     [SerializeField] private float acceleration;
     [SerializeField] private float deceleration;
     
+    [Header("Jump")]
+    [SerializeField] private float jumpHeight;
+    [SerializeField, HideInInspector] private float jumpSpeed;
+    
     [SerializeField, HideInInspector] private Rigidbody2D rb;
-    [SerializeField] private bool isGrounded;
+    private bool isGrounded;
 
     private Vector2 targetVelocity;
 
     private void OnValidate()
     {
         rb = GetComponent<Rigidbody2D>();
+        jumpSpeed = Mathf.Sqrt(2 * Mathf.Abs(Physics2D.gravity.y) * jumpHeight);
     }
     
     public void HandleMovementInput(Vector2 input)
@@ -36,4 +42,10 @@ public class WasdMovement : MonoBehaviour
     }
     
     public void SetGrounded(bool groundedState) => isGrounded = groundedState;
+    
+    public void Jump()
+    {
+        if (!isGrounded) return;
+        rb.linearVelocity += jumpSpeed * Vector2.up;
+    }
 }

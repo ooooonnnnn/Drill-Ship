@@ -17,6 +17,7 @@ public class InputManager : MonoBehaviour
     public UnityEvent OnRmbHold;
     public UnityEvent OnInteract;
     public UnityEvent<Vector2> OnMove;
+    public UnityEvent OnJump;
     public static bool IsLmbDown { get; private set;}
     public static bool IsRmbDown { get; private set;}
     //TODO: Remove this
@@ -61,6 +62,7 @@ public class InputManager : MonoBehaviour
         };
         actions.Player.Interact.performed += _ => OnInteract.Invoke();
         actions.Player.Move.performed += context => OnMove.Invoke(context.ReadValue<Vector2>());
+        actions.Player.Jump.performed += _ => OnJump.Invoke();
     }
 
     private void OnEnable()
