@@ -1,9 +1,10 @@
 using System;
-using System.Linq;
+using System.Collections;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Vector2 = UnityEngine.Vector2;
+using Helper;
+using Unity.VisualScripting;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class WasdMovement : MonoBehaviour
@@ -14,10 +15,9 @@ public class WasdMovement : MonoBehaviour
     [SerializeField] private float deceleration;
     
     [Header("Jump")]
-    //[SerializeField] private float jumpHeight;
-
-    [SerializeField, InspectorName("jumpHeight")] private AnimationCurve jumpCurve;
-    //[SerializeField, HideInInspector] private float jumpSpeed;
+    [SerializeField] private float jumpHeight;
+    [SerializeField] private float jumpTime;
+    [SerializeField] private AnimationCurve jumpCurve;
     
     [SerializeField, HideInInspector] private Rigidbody2D rb;
     private bool isGrounded;
@@ -28,7 +28,6 @@ public class WasdMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         ValidateJumpCurve();
-        //jumpSpeed = Mathf.Sqrt(2 * Mathf.Abs(Physics2D.gravity.y) * jumpHeight);
     }
 
     private void ValidateJumpCurve()
@@ -42,11 +41,13 @@ public class WasdMovement : MonoBehaviour
         keys[2].time = 1;
         keys[2].value = 0;
 
-        keys[1].outWeight = keys[1].inWeight;
+        keys[0].inTangent = keys[0].outTangent;
         keys[1].inTangent = 0;
         keys[1].outTangent = 0;
-        
         keys[2].inTangent = -keys[0].outTangent;
+        keys[2].outTangent = keys[2].inTangent;
+        
+        keys[1].outWeight = keys[1].inWeight;
         keys[2].inWeight = keys[0].outWeight;
         
         jumpCurve.SetKeys(keys);
@@ -76,7 +77,27 @@ public class WasdMovement : MonoBehaviour
     
     public void Jump()
     {
-        if (!isGrounded) return;
-        //rb.linearVelocity += jumpSpeed * Vector2.up;
+        //if (!isGrounded) return;
+        
+        float startingHeight = transform.position.y;
+
+        StartCoroutine(JumpCoroutine());
+    }
+
+    private IEnumerator JumpCoroutine()
+    {
+        float startTime = Time.time;
+
+        while (Time.time - startTime <= jumpTime)
+        {
+            float curveTime = (Time.time - startTime) / jumpTime;
+            float yVelocity = jumpCurve.EvaluateDerivative(curveTime) * jumpHeight / jumpTime;
+            
+            Vector2 newVel = rb.linearVelocity;
+            newVel.y = yVelocity;
+            rb.linearVelocity = newVel;
+            
+            yield return null;
+        }
     }
 }
