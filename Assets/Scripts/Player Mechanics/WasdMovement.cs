@@ -22,7 +22,7 @@ public class WasdMovement : MonoBehaviour
     [SerializeField, HideInInspector] private Rigidbody2D rb;
     private bool isGrounded;
 
-    private Vector2 targetVelocity;
+    private float targetVelocity;
 
     private void OnValidate()
     {
@@ -59,18 +59,21 @@ public class WasdMovement : MonoBehaviour
     
     public void HandleMovementInput(Vector2 input)
     {
-        targetVelocity.x = input.x * speed;
+        targetVelocity = input.x * speed;
     }
     
     private void FixedUpdate()
     {
-        Vector2 currentVelocity = rb.linearVelocity;
-        Vector2 deltaVelocity = targetVelocity - currentVelocity;
-        float velChangeNeeded = deltaVelocity.magnitude;
-        float chosenAcceleration = Vector2.Dot(targetVelocity, currentVelocity) > 0 ? acceleration : deceleration;
-        float maxVelChange = chosenAcceleration;
-        float velChange = Math.Min(velChangeNeeded, maxVelChange);
-        rb.linearVelocity += new Vector2((velChange * deltaVelocity.normalized).x, 0);
+        //Walk
+        var currentVelocity = rb.linearVelocity.x;
+        var deltaVelocity = targetVelocity - currentVelocity;
+        var direction = Math.Sign(deltaVelocity);
+        deltaVelocity = Mathf.Abs(deltaVelocity);
+        var chosenAcceleration = targetVelocity * currentVelocity > 0 ? acceleration : deceleration;
+        var maxVelChange = chosenAcceleration * Time.fixedDeltaTime;
+        var velChange = Math.Min(deltaVelocity, maxVelChange);
+        rb.AddForce(new Vector2(direction * velChange, 0), ForceMode2D.Impulse);
+        //rb.linearVelocity += new Vector2((velChange * deltaVelocity.normalized).x, 0);
     }
     
     public void SetGrounded(bool groundedState) => isGrounded = groundedState;
@@ -79,23 +82,22 @@ public class WasdMovement : MonoBehaviour
     {
         //if (!isGrounded) return;
         
-        float startingHeight = transform.position.y;
+        var startingHeight = transform.position.y;
 
         StartCoroutine(JumpCoroutine());
     }
 
     private IEnumerator JumpCoroutine()
     {
-        float startTime = Time.time;
+        var startTime = Time.time;
 
         while (Time.time - startTime <= jumpTime)
         {
-            float curveTime = (Time.time - startTime) / jumpTime;
-            float yVelocity = jumpCurve.EvaluateDerivative(curveTime) * jumpHeight / jumpTime;
+            var curveTime = (Time.time - startTime) / jumpTime;
+            var velocityTarget = jumpCurve.EvaluateDerivative(curveTime) * jumpHeight / jumpTime;
             
-            Vector2 newVel = rb.linearVelocity;
-            newVel.y = yVelocity;
-            rb.linearVelocity = newVel;
+            var deltaVelocity = velocityTarget - rb.linearVelocity.y;
+            rb.AddForce(new Vector2(0, deltaVelocity), ForceMode2D.Impulse);
             
             yield return null;
         }
