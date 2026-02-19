@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 
@@ -32,7 +31,6 @@ public class WasdMovement : MonoBehaviour
         float chosenAcceleration = Vector2.Dot(targetVelocity, currentVelocity) > 0 ? acceleration : deceleration;
         float maxVelChange = chosenAcceleration;
         float velChange = Math.Min(velChangeNeeded, maxVelChange);
-        // rb.AddForce(deltaVelocity.normalized * chosenAcceleration);
         rb.linearVelocity += new Vector2((velChange * deltaVelocity.normalized).x, 0);
     }
 }

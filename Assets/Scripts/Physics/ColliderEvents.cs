@@ -8,6 +8,7 @@ public class ColliderEvents : MonoBehaviour
     public UnityEvent<Collider2D> OnTriggerEnter;
     public UnityEvent<Collision2D> OnCollisionEnter;
     public UnityEvent<Collision2D> OnCollisionStay;
+    public UnityEvent<Collision2D> OnCollisionExit;
     
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -22,5 +23,10 @@ public class ColliderEvents : MonoBehaviour
     private void OnCollisionStay2D(Collision2D other)
     {
         OnCollisionStay.Invoke(other);
+    }
+
+    private void OnCollisionExit2D(Collision2D other)
+    {
+        OnCollisionExit.Invoke(other);
     }
 }
