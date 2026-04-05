@@ -21,13 +21,19 @@ public class WasdMovement : MonoBehaviour
     
     [SerializeField, HideInInspector] private Rigidbody2D rb;
     private bool isGrounded;
-
+    private Coroutine jumpCoroutine;
     private float targetVelocity;
 
     private void OnValidate()
     {
         rb = GetComponent<Rigidbody2D>();
         ValidateJumpCurve();
+    }
+
+    private void Start()
+    {
+        jumpCoroutine = StartCoroutine(JumpCoroutine(0.5f));
+        rb.gravityScale = 1;
     }
 
     private void ValidateJumpCurve()
@@ -76,30 +82,41 @@ public class WasdMovement : MonoBehaviour
         //rb.linearVelocity += new Vector2((velChange * deltaVelocity.normalized).x, 0);
     }
     
-    public void SetGrounded(bool groundedState) => isGrounded = groundedState;
+    public void SetGrounded(bool groundedState)
+    {
+        isGrounded = groundedState;
+    }
     
     public void Jump()
     {
-        //if (!isGrounded) return;
+        if (!isGrounded) return;
         
-        var startingHeight = transform.position.y;
-
-        StartCoroutine(JumpCoroutine());
+        jumpCoroutine = StartCoroutine(JumpCoroutine(0f));
     }
 
-    private IEnumerator JumpCoroutine()
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="startTimePercent">Where to start evaluating the curve, by percentage. Use 0.5f to fall from 0 initial velocity</param>
+    /// <returns></returns>
+    private IEnumerator JumpCoroutine(float startTimePercent)
     {
+        rb.gravityScale = 0;
+        if (startTimePercent is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(startTimePercent));
+        
         var startTime = Time.time;
 
-        while (Time.time - startTime <= jumpTime)
+        float curveTime;
+        do
         {
-            var curveTime = (Time.time - startTime) / jumpTime;
+            curveTime = (Time.time - startTime) / jumpTime + startTimePercent;
             var velocityTarget = jumpCurve.EvaluateDerivative(curveTime) * jumpHeight / jumpTime;
-            
+
             var deltaVelocity = velocityTarget - rb.linearVelocity.y;
             rb.AddForce(new Vector2(0, deltaVelocity), ForceMode2D.Impulse);
-            
+
             yield return null;
-        }
+        } while (curveTime <= 1);
+        rb.gravityScale = 1;
     }
 }

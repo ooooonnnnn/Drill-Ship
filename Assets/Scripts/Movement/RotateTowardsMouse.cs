@@ -13,10 +13,6 @@ public class RotateTowardsMouse : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private void Awake()
-    {
-    }
-
     void FixedUpdate()
     {
         float angleSelfToMouse = Vector2.SignedAngle(transform.right, MousePos - (Vector2)transform.position);
