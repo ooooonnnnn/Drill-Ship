@@ -4,5 +4,6 @@ public enum ResourceType
 {
     None,
     Fuel,
-    Iron
+    Iron,
+    Organic
 }

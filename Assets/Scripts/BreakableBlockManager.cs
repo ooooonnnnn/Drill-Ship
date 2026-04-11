@@ -13,11 +13,13 @@ public class BreakableBlockManager : MonoBehaviour
 
     [Header("Ground Types")]
     [SerializeField] private GroundTypeChance[] groundTypeChances;
-    [SerializeField] private SerializedDictionary<GroundType, GroundData> groundDataLookup;
+    [SerializeField] private GroundData[] groundDataToUse;
+    [SerializeField, HideInInspector] private SerializedDictionary<GroundType, GroundData> groundDataLookup;
 
     [Header("Resource Types")]
     [SerializeField] private ResourceTypeChance[] resourceTypeChances;
-    [SerializeField] private SerializedDictionary<ResourceType, ResourceData> resourceDataLookup;
+    [SerializeField] private ResourceData[] resourceDataToUse;
+    [SerializeField, HideInInspector] private SerializedDictionary<ResourceType, ResourceData> resourceDataLookup;
 
     [Header("Grid")]
     [SerializeField] private int gridWidth;
@@ -34,18 +36,19 @@ public class BreakableBlockManager : MonoBehaviour
 
     private void OnValidate()
     {
-        // //Initialize data lookup dictionaries
-        // groundDataLookup = new();
-        // foreach (GroundType groundType in Enum.GetValues(typeof(GroundType)))
-        // {
-        //     groundDataLookup.Add(groundType, null);
-        // }
-        // resourceDataLookup = new();
-        // foreach (ResourceType resourceType in Enum.GetValues(typeof(ResourceType)))
-        // {
-        //     resourceDataLookup.Add(resourceType, null);
-        // }
+        //Initialize data lookup dictionaries
+        groundDataLookup = new();
+        foreach (GroundData data in groundDataToUse)
+        {
+            groundDataLookup.Add(data.GroundType, data);
+        }
+        resourceDataLookup = new();
+        foreach (ResourceData data in resourceDataToUse)
+        {
+            resourceDataLookup.Add(data.ResourceType, data);
+        }
         
+        //Save breakable block components
         breakableBlockComponents = new();
         BreakableBlock[] components = FindObjectsByType<BreakableBlock>(FindObjectsSortMode.None);
         foreach (BreakableBlock component in components)
@@ -72,7 +75,6 @@ public class BreakableBlockManager : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-
     /// <summary>Destroys all child blocks and regenerates the grid using current settings.</summary>
     public void GenerateBlocks()
     {
