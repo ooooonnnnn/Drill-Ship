@@ -59,7 +59,7 @@ public class BlockDigger : MonoBehaviour
         //check if diggable
         if (!mostFrontalGO.CompareTag("Diggable")) return;
         
-        BreakableBlockManager.Instance.GetBreakableBlockComponent(mostFrontalGO).TakeDamage();
         OnDig.Invoke();
+        BreakableBlockManager.Instance.GetBreakableBlockComponent(mostFrontalGO).TakeDamage();
     }
 }

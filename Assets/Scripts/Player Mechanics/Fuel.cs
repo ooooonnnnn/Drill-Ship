@@ -20,11 +20,20 @@ public class Fuel : MonoBehaviour
     }
     private float _currentFuel;
 
+    public static Fuel Instance { get; private set; }
+
     private void Awake()
     {
+        Instance = this;
         currentFuel = maxFuel;
     }
-    
+
+    /// <summary>Adds fuel to the player, clamped to maxFuel.</summary>
+    public void AddFuel(float amount)
+    {
+        currentFuel = Mathf.Min(currentFuel + amount, maxFuel);
+    }
+
     public void ConsumeFuel(float amount)
     {
         currentFuel -= amount;

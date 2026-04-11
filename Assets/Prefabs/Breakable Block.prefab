@@ -86,9 +86,9 @@ SpriteMask:
   m_BackSortingLayerID: 0
   m_FrontSortingLayer: 0
   m_BackSortingLayer: 0
-  m_FrontSortingOrder: 0
-  m_BackSortingOrder: 0
-  m_IsCustomRangeActive: 0
+  m_FrontSortingOrder: 3
+  m_BackSortingOrder: 1
+  m_IsCustomRangeActive: 1
   m_SpriteSortPoint: 0
   m_MaskSource: 0
 --- !u!1 &3750138576530654934
@@ -246,10 +246,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b87c070962fc55e4993acd687913625b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  groundType: 0
+  resourceType: 0
+  maxHealth: 0
+  currentHealth: 0
   blockSpriteRenderer: {fileID: 3933244063374966608}
   resourceOverlayRenderer: {fileID: 8748356645677115585}
   cracksOverlayRenderer: {fileID: 4169308538952762182}
   cracksMask: {fileID: 4025720167596667247}
+  amountFuel: 6
 --- !u!50 &7927707155868257098
 Rigidbody2D:
   serializedVersion: 5

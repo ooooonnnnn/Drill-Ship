@@ -13,6 +13,8 @@ public class BreakableBlock : MonoBehaviour
     [SerializeField, HideInInspector] private SpriteRenderer resourceOverlayRenderer;
     [SerializeField, HideInInspector] private SpriteRenderer cracksOverlayRenderer;
     [SerializeField, HideInInspector] private SpriteMask cracksMask;
+    
+    [SerializeField] private float amountFuel;
 
     private void OnValidate()
     {
@@ -47,7 +49,7 @@ public class BreakableBlock : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Inventory.Instance.AddItem(resourceType);
+            DispenseResource();
             BreakableBlockManager.Instance.LogBlockDestroyed(transform.position);
             Destroy(gameObject);
             return;
@@ -56,9 +58,24 @@ public class BreakableBlock : MonoBehaviour
         UpdateCracksOverlay();
     }
 
+    private void DispenseResource()
+    {
+        switch (resourceType)
+        {
+            case ResourceType.None:
+                break;
+            case ResourceType.Fuel:
+                Fuel.Instance.AddFuel(amountFuel);
+                break;
+            default:
+                Inventory.Instance.AddItem(resourceType);
+                break;
+        }
+    }
+
     private void UpdateCracksOverlay()
     {
-        if (cracksMask == null)
+        if (!cracksMask)
             return;
 
         float fill = maxHealth > 0 ? 1f - (float)currentHealth / maxHealth : 0f;
