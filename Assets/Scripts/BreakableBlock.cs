@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class BreakableBlock : MonoBehaviour
 {
-    private GroundType groundType;
-    private ResourceType resourceType;
+    [SerializeField, HideInInspector] private GroundType groundType;
+    [SerializeField, HideInInspector] private ResourceType resourceType;
 
-    private int maxHealth;
-    private int currentHealth;
+    [SerializeField, HideInInspector] private int maxHealth;
+    [SerializeField, HideInInspector] private int currentHealth;
 
     [SerializeField, HideInInspector] private SpriteRenderer blockSpriteRenderer;
     [SerializeField, HideInInspector] private SpriteRenderer resourceOverlayRenderer;

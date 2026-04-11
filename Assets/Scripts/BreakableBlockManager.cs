@@ -102,6 +102,7 @@ public class BreakableBlockManager : MonoBehaviour
                 ResourceType resourceType = ChooseRandomResourceType();
 
                 newBlock.Initialize(groundType, resourceType, groundDataLookup[groundType], resourceDataLookup[resourceType]);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(newBlock);
             }
         }
     }
