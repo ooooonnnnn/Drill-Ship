@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e97b835cb6f6b341923a0aea7c5950e, type: 3}
   m_Name: Stone
   m_EditorClassIdentifier: Assembly-CSharp::BreakableBlockSettings
-  resourceType: 1
-  health: 2
-  colorFullHealth: {r: 0.29559743, g: 0.22317605, b: 0.17010793, a: 1}
-  colorOneHealth: {r: 0.128, g: 0.096, b: 0.07410526, a: 1}
+  groundType: 0
+  baseHealth: 4
+  blockSprite: {fileID: 21300000, guid: d55426a065bf8894892febd8ad3a481f, type: 3}

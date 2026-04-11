@@ -10,9 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e97b835cb6f6b341923a0aea7c5950e, type: 3}
-  m_Name: Iron
+  m_Name: Dirt
   m_EditorClassIdentifier: Assembly-CSharp::BreakableBlockSettings
-  resourceType: 2
-  health: 4
-  colorFullHealth: {r: 0.472, g: 0.43424, b: 0.43424, a: 1}
-  colorOneHealth: {r: 0.113000005, g: 0.09167925, b: 0.09167925, a: 1}
+  groundType: 1
+  baseHealth: 1
+  blockSprite: {fileID: 21300000, guid: 391d3d1f6bae3e84fb41305a2045a0d2, type: 3}
